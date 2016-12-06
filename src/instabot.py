@@ -4,6 +4,7 @@ from random import randint, uniform
 import re
 from time import sleep
 
+import click
 import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import ChunkedEncodingError
@@ -134,20 +135,25 @@ class Instabot:
             if fail_count > 10:
                 break
 
-            if not (progress % 1000):
+            if not (progress % 2000):
                 sleep(300)
 
-            sleep(uniform(1.5, 2.5))
+            sleep(uniform(1.5, 4.0))
 
         list_to_csv(users, self.users_file_path, mode="wb+")
 
 
-if __name__ == "__main__":
-    account_list = accounts["fiftytwofood"]["similar_ig_users"]
-    subreddits = accounts["fiftytwofood"]["subreddits"]
-    username = accounts["fiftytwofood"]["username"]
-    password = accounts["fiftytwofood"]["password"]
-
+@click.command()
+@click.option('--account', default='hwzearth', prompt='Account: ', help='Instagram account name')
+def main(account):
+    account_list = accounts[account]["similar_ig_users"]
+    subreddits = accounts[account]["subreddits"]
+    username = accounts[account]["username"]
+    password = accounts[account]["password"]
     bot = Instabot(username, password, account_list, subreddits)
 
     bot.start()
+
+
+if __name__ == "__main__":
+    main()

@@ -19,9 +19,28 @@ accounts = {
             'spoonforkbacon',
 
         ],
-        'subreddits':[
+        'subreddits': [
             'foodporn',
             'dessert'
+        ]
+    },
+    'hwzearth': {
+        'username': 'hwzearth',
+        'id': 4233482107,
+        'password': passwords['hwzearth'],
+        'similar_ig_users': [
+            'awesome.earth',
+            'nasa',
+            'bbcearth',
+            'earthporm',
+            'usinterior',
+            'paulnicklen',
+            'jimmy_chin',
+            'timlaman',
+
+        ],
+        'subreddits': [
+            'earthporn',
         ]
     }
 }
