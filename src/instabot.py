@@ -12,7 +12,7 @@ from configs import accounts
 from netutils import generate_request_header
 
 from instagramapi import InstagramAPI
-from src.utils import list_to_csv, csv_to_list, text_to_list, append_to_file
+from utils import list_to_csv, csv_to_list, text_to_list, append_to_file
 
 
 class Instabot:
