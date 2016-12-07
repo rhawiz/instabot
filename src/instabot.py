@@ -1,3 +1,6 @@
+#dilman1234
+
+import json
 from random import randint, uniform
 import datetime
 
@@ -13,7 +16,8 @@ from configs import accounts
 from netutils import generate_request_header
 
 from instagramapi import InstagramAPI
-from utils import csv_to_list, append_to_file, write_to_file
+from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file
+
 
 
 class Instabot:
@@ -88,47 +92,6 @@ class Instabot:
             followers.append((details[u"pk"], details[u"username"]))
         return followers
 
-    def follow_unfollow_users(self, users, followers):
-        fail_count = 0
-        progress = 0
-        while users:
-            progress += 1
-            if progress % 5 > 0 or not len(followers):
-                id, username = users.pop(0)
-                print "following user {}({})".format(username, id)
-                status = self.API.follow(id)
-            else:
-                id, username = followers.pop()
-                print "unfollowing user {}({})".format(username, id)
-                status = self.API.unfollow(id)
-
-            print "\tstatus:{}".format(status)
-            if status:
-                fail_count = 0
-            elif not status:
-                print self.API.last_response.content
-                fail_count += 1
-
-            if fail_count == 3:
-                print "3 failed requests in a row. Sleeping for 10 mins"
-                sleep(1200)
-            elif fail_count > 10:
-                print "10 failed requests in a row. Sleeping for 2 hours"
-                sleep(randint(7200))
-                break
-
-            # Sleep between 3hrs and 5hrs ever 1225 requests
-            if not (progress % 1000):
-                rnd_wait = randint(10800, 18000)
-                print "1000 requests sent. Sleeping for {} mins".format(rnd_wait * 60)
-                sleep(rnd_wait)
-
-            sleep(uniform(2.0, 6.0))
-
-        write_to_file("", self.users_file_path)
-        for user in users:
-            append_to_file("{},{}\n".format(id, username), self.users_file_path)
-
     def start(self, unfollow):
         start_time = datetime.datetime.now()
         print "Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M"))
@@ -159,9 +122,50 @@ class Instabot:
         end_time = datetime.datetime.now()
         print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
 
+    def follow_unfollow_users(self, users, followers):
+        fail_count = 0
+        progress = 0
+        while users:
+            progress += 1
+            if progress % 5 > 0 or not len(followers):
+                id, username = users.pop(0)
+                print "following user {}({})".format(username, id)
+                status = self.API.follow(id)
+            else:
+                id, username = followers.pop()
+                print "unfollowing user {}({})".format(username, id)
+                status = self.API.unfollow(id)
+
+            print "\tstatus:{}".format(status)
+            if status:
+                fail_count = 0
+            elif not status:
+                print self.API.last_response.content
+                fail_count += 1
+
+            if fail_count == 3:
+                print "3 failed requests in a row. Sleeping for 10 mins"
+                sleep(1200)
+            elif fail_count > 10:
+                print "10 failed requests in a row. Sleeping for 2 hours"
+                sleep(randint(7200))
+                break
+
+            # Sleep between 3hrs and 5hrs ever 1225 requests
+            if not (progress % 150): #if divisible/modulus 60 is not 0 (if not == if not zero) then do. i.e. every 60
+                rnd_wait = randint(3600, 7200)
+                print "150 requests sent. Sleeping for {} mins".format(rnd_wait * 60)
+                sleep(rnd_wait)
+
+            sleep(uniform(2.0, 6.0)) #wait 2-6 secs between requests
+
+        write_to_file("", self.users_file_path)
+        for id,username in users:
+            append_to_file("{},{}\n".format(id, username), self.users_file_path)
+
 
 @click.command()
-@click.option('--account', default='hwzearth', prompt='Account: ', help='Instagram account name')
+@click.option('--account', default='hwzfit', prompt='Account: ', help='Instagram account name')
 @click.option('--unfollow', is_flag=True, prompt='Unfollow: ', help='Unfollow users')
 def main(account, unfollow):
     account_list = accounts[account]["similar_ig_users"]
