@@ -1,4 +1,3 @@
-import json
 from random import randint, uniform
 import datetime
 
@@ -14,7 +13,7 @@ from configs import accounts
 from netutils import generate_request_header
 
 from instagramapi import InstagramAPI
-from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file
+from utils import csv_to_list, append_to_file, write_to_file
 
 
 class Instabot:
@@ -89,36 +88,6 @@ class Instabot:
             followers.append((details[u"pk"], details[u"username"]))
         return followers
 
-    def start(self, unfollow):
-        start_time = datetime.datetime.now()
-        print "Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M"))
-
-        self.API = InstagramAPI(self.username, self.password)
-
-        attempts = 0
-        while attempts <= 5:
-            try:
-                self.API.login()
-                followers = []
-                if unfollow:
-                    followers = self.get_followers()
-                users = []
-
-                try:
-                    users = csv_to_list(self.users_file_path)
-                except IOError, e:
-                    print "No user list found..."
-                if not len(users):
-                    users = self._get_account_ids(save_to=self.users_file_path)
-                print "Starting...{} new users and {} followers.".format(len(users), len(followers))
-                self.follow_unfollow_users(users, followers)
-                break
-            except Exception, e:
-                print e
-                attempts += 1
-        end_time = datetime.datetime.now()
-        print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
-
     def follow_unfollow_users(self, users, followers):
         fail_count = 0
         progress = 0
@@ -159,6 +128,36 @@ class Instabot:
         write_to_file("", self.users_file_path)
         for user in users:
             append_to_file("{},{}\n".format(id, username), self.users_file_path)
+
+    def start(self, unfollow):
+        start_time = datetime.datetime.now()
+        print "Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M"))
+
+        self.API = InstagramAPI(self.username, self.password)
+
+        attempts = 0
+        while attempts <= 5:
+            try:
+                self.API.login()
+                followers = []
+                if unfollow:
+                    followers = self.get_followers()
+                users = []
+
+                try:
+                    users = csv_to_list(self.users_file_path)
+                except IOError, e:
+                    print "No user list found..."
+                if not len(users):
+                    users = self._get_account_ids(save_to=self.users_file_path)
+                print "Starting...{} new users and {} followers.".format(len(users), len(followers))
+                self.follow_unfollow_users(users, followers)
+                break
+            except Exception, e:
+                print e
+                attempts += 1
+        end_time = datetime.datetime.now()
+        print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
 
 
 @click.command()
