@@ -1,23 +1,15 @@
 from passwords import passwords
 
-accounts = {
-    'fiftytwofood': {
-        'username': 'fiftytwofood',
-        'id': 4175624932,
-        'password': passwords['fiftytwofood'],
-        'similar_ig_users': [
-            'love_food',
-            'flavorgod',
-            'sobeautifullyreal',
-            'inspiralized',
-            'dessert__lover',
-            'insiderdessert',
-            'foodfast_',
-            'cakes',
-            'buzzfeedfood',
-            'foodnetwork',
-            'spoonforkbacon',
+#https://www.instagram.com/hwzfit/?__a=1
 
+accounts = {
+    'hwzfit': {
+        'username': 'hwzfit',
+        'id': 4152498417,
+        'password': passwords['hwzfit'],
+        'similar_ig_users': [
+            'simplyshredded',
+            'lazar_angelov_official'
         ],
         'subreddits': [
             'foodporn',

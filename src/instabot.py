@@ -152,20 +152,20 @@ class Instabot:
                 break
 
             # Sleep between 3hrs and 5hrs ever 1225 requests
-            if not (progress % 1000):
-                rnd_wait = randint(10800, 18000)
-                print "1000 requests sent. Sleeping for {} mins".format(rnd_wait * 60)
+            if not (progress % 150): #if divisible/modulus 60 is not 0 (if not == if not zero) then do. i.e. every 60
+                rnd_wait = randint(3600, 7200)
+                print "150 requests sent. Sleeping for {} mins".format(rnd_wait * 60)
                 sleep(rnd_wait)
 
-            sleep(uniform(2.0, 6.0))
+            sleep(uniform(2.0, 6.0)) #wait 2-6 secs between requests
 
         write_to_file("", self.users_file_path)
-        for user in users:
+        for id,username in users:
             append_to_file("{},{}\n".format(id, username), self.users_file_path)
 
 
 @click.command()
-@click.option('--account', default='hwzearth', prompt='Account: ', help='Instagram account name')
+@click.option('--account', default='hwzfit', prompt='Account: ', help='Instagram account name')
 @click.option('--unfollow', is_flag=True, prompt='Unfollow: ', help='Unfollow users')
 def main(account, unfollow):
     account_list = accounts[account]["similar_ig_users"]
