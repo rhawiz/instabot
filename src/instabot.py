@@ -19,6 +19,7 @@ from instagramapi import InstagramAPI
 from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file
 
 
+
 class Instabot:
     REDDIT_URL = "https://www.reddit.com/r/{}/top/?sort=top&t={}&count={}"
 
