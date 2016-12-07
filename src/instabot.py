@@ -1,5 +1,6 @@
 import json
 from random import randint, uniform
+import datetime
 
 import re
 from time import sleep
@@ -13,11 +14,11 @@ from configs import accounts
 from netutils import generate_request_header
 
 from instagramapi import InstagramAPI
-from utils import list_to_csv, csv_to_list, text_to_list, append_to_file
+from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file
 
 
 class Instabot:
-    REDDIT_URL = "https://www.reddit.com/r/{}/top/?sort=top&t=all&count={}"
+    REDDIT_URL = "https://www.reddit.com/r/{}/top/?sort=top&t={}&count={}"
 
     def __init__(self, username, password, account_list, subreddits):
         self.username = username
@@ -37,7 +38,7 @@ class Instabot:
 
         # Get root account posts
         maxid = ''
-        pages = 2
+        pages = 1
         media_ids = []
         for i in range(0, pages):
             self.API.get_user_feed(root_acc_id, maxid=maxid)
@@ -64,8 +65,8 @@ class Instabot:
 
     def _get_reddit_content(self):
         subreddit = self.subreddit_list[randint(0, len(self.subreddit_list) - 1)]
-        random_page = randint(1, 10) * 25
-        reddit_url = self.REDDIT_URL.format(subreddit, random_page)
+        random_page = randint(0, 10) * 25
+        reddit_url = self.REDDIT_URL.format(subreddit, "day", random_page)
 
         html = requests.get(reddit_url, headers=generate_request_header()).content
 
@@ -81,21 +82,26 @@ class Instabot:
         print title, img_url
 
     def get_followers(self):
+
         followers_details = self.API.get_total_followings(username_id=self.API.username_id)
         followers = []
         for details in followers_details:
             followers.append((details[u"pk"], details[u"username"]))
         return followers
 
-    def start(self):
+    def start(self, unfollow):
+        start_time = datetime.datetime.now()
+        print "Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M"))
+
         self.API = InstagramAPI(self.username, self.password)
 
         attempts = 0
         while attempts <= 5:
             try:
                 self.API.login()
-
-                followers = self.get_followers()
+                followers = []
+                if unfollow:
+                    followers = self.get_followers()
                 users = []
 
                 try:
@@ -110,9 +116,10 @@ class Instabot:
             except Exception, e:
                 print e
                 attempts += 1
+        end_time = datetime.datetime.now()
+        print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
 
     def follow_unfollow_users(self, users, followers):
-        success_list = []
         fail_count = 0
         progress = 0
         while users:
@@ -128,31 +135,43 @@ class Instabot:
 
             print "\tstatus:{}".format(status)
             if status:
-                success_list.append(id)
+                fail_count = 0
             elif not status:
+                print self.API.last_response.content
                 fail_count += 1
 
-            if fail_count > 10:
+            if fail_count == 3:
+                print "3 failed requests in a row. Sleeping for 10 mins"
+                sleep(1200)
+            elif fail_count > 10:
+                print "10 failed requests in a row. Sleeping for 2 hours"
+                sleep(randint(7200))
                 break
 
-            if not (progress % 2000):
-                sleep(300)
+            # Sleep between 3hrs and 5hrs ever 1225 requests
+            if not (progress % 1000):
+                rnd_wait = randint(10800, 18000)
+                print "1000 requests sent. Sleeping for {} mins".format(rnd_wait * 60)
+                sleep(rnd_wait)
 
-            sleep(uniform(1.5, 4.0))
+            sleep(uniform(2.0, 6.0))
 
-        list_to_csv(users, self.users_file_path, mode="wb+")
+        write_to_file("", self.users_file_path)
+        for user in users:
+            append_to_file("{},{}\n".format(id, username), self.users_file_path)
 
 
 @click.command()
 @click.option('--account', default='hwzearth', prompt='Account: ', help='Instagram account name')
-def main(account):
+@click.option('--unfollow', is_flag=True, prompt='Unfollow: ', help='Unfollow users')
+def main(account, unfollow):
     account_list = accounts[account]["similar_ig_users"]
     subreddits = accounts[account]["subreddits"]
     username = accounts[account]["username"]
     password = accounts[account]["password"]
-    bot = Instabot(username, password, account_list, subreddits)
 
-    bot.start()
+    bot = Instabot(username, password, account_list, subreddits)
+    bot.start(unfollow=unfollow)
 
 
 if __name__ == "__main__":
