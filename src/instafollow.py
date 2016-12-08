@@ -133,7 +133,7 @@ class InstaFollow:
             # Sleep between 30mins and 45mins ever 150 requests
             if not (progress % 150):  # if divisible/modulus 60 is not 0 (if not == if not zero) then do. i.e. every 60
                 rnd_wait = randint(1800, 2700)
-                print "150 requests sent. Sleeping for {} mins".format(rnd_wait / 60)
+                print "100 requests sent. Sleeping for {} mins".format(rnd_wait / 60)
                 sleep(rnd_wait)
 
             sleep(uniform(2.0, 6.0))  # wait 2-6 secs between requests
