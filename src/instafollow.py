@@ -136,7 +136,7 @@ class InstaFollow:
                 print "100 requests sent. Sleeping for {} mins".format(rnd_wait / 60)
                 sleep(rnd_wait)
 
-            sleep(uniform(2.0, 6.0))  # wait 2-6 secs between requests
+            sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
 
         write_to_file("", self.users_file_path)
         for id, username in users:

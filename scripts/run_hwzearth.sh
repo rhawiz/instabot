@@ -1,1 +1,1 @@
-python ../src/instafollow.py --account hwzearth --unfollow
+sudo nohup_hwzearth python ../src/instafollow.py --account hwzearth --unfollow &
