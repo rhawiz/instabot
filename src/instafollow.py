@@ -109,7 +109,7 @@ class InstaFollow:
             progress += 1
             if progress % 5 > 0 or not len(followers):
                 id, username = users.pop(0)
-                print "following user {}({})".format(username, id)
+                print "{} following user {}({})".format(self.username, username, id)
                 status = self.API.follow(id)
                 if status:
                     follow_fail_count = 0
@@ -118,7 +118,7 @@ class InstaFollow:
                     follow_fail_count += 1
             else:
                 id, username = followers.pop()
-                print "unfollowing user {}({})".format(username, id)
+                print "{} unfollowing user {}({})".format(self.username, username, id)
                 status = self.API.unfollow(id)
                 if status:
                     unfollow_fail_count = 0
@@ -137,7 +137,7 @@ class InstaFollow:
                 sleep(rnd_wait)
 
             # Sleep between 30mins and 45mins ever 150 requests
-            if not (progress % 150):  # if divisible/modulus 60 is not 0 (if not == if not zero) then do. i.e. every 60
+            if not (progress % 100):  # if divisible/modulus 60 is not 0 (if not == if not zero) then do. i.e. every 60
                 rnd_wait = randint(1800, 2700)
                 print "100 requests sent. Sleeping for {} mins".format(rnd_wait / 60)
                 sleep(rnd_wait)
