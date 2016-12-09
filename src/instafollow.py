@@ -102,7 +102,8 @@ class InstaFollow:
         print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
 
     def follow_unfollow_users(self, users, followers):
-        fail_count = 0
+        unfollow_fail_count = 0
+        follow_fail_count = 0
         progress = 0
         while users:
             progress += 1
@@ -110,24 +111,29 @@ class InstaFollow:
                 id, username = users.pop(0)
                 print "following user {}({})".format(username, id)
                 status = self.API.follow(id)
+                if status:
+                    follow_fail_count = 0
+                elif not status:
+                    print self.API.last_response.content
+                    follow_fail_count += 1
             else:
                 id, username = followers.pop()
                 print "unfollowing user {}({})".format(username, id)
                 status = self.API.unfollow(id)
+                if status:
+                    unfollow_fail_count = 0
+                elif not status:
+                    print self.API.last_response.content
+                    unfollow_fail_count += 1
 
             print "\tstatus:{}".format(status)
-            if status:
-                fail_count = 0
-            elif not status:
-                print self.API.last_response.content
-                fail_count += 1
 
-            if fail_count == 3:
-                print "3 failed requests in a row. Sleeping for 10 mins"
+            if follow_fail_count == 3:
+                print "3 failed follow requests in a row. Sleeping for 10 mins"
                 sleep(1200)
-            elif fail_count > 10:
+            elif follow_fail_count > 10:
                 rnd_wait = randint(21600, 28800)
-                print "10 failed requests in a row. Sleeping for {} mins".format(rnd_wait / 60)
+                print "10 failed follow requests in a row. Sleeping for {} mins".format(rnd_wait / 60)
                 sleep(rnd_wait)
 
             # Sleep between 30mins and 45mins ever 150 requests
