@@ -1,1 +1,0 @@
-sudo nohup python ../src/instafollow.py --account fiftytwofood --unfollow &

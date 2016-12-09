@@ -1,0 +1,1 @@
+sudo python ../src/instafollow.py --account fiftytwofood --unfollow & python ../src/instafollow.py --account hwzearth --unfollow &
