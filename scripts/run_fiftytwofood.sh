@@ -1,1 +1,1 @@
-sudo python instafollow.py --username hwzearth --password hidden --follows 100 --wait 60 --similar_users awesome.earth,nasa,bbcearth,earthporm,usinterior,paulnicklen,jimmy_chin,timlaman
+sudo python instafollow.py --username fiftytwofood --password hidden --follows 100 --wait 60 --similar_users love_food,flavorgod,sobeautifullyreal,inspiralized,dessert__lover,insiderdessert,foodfast_,cakes,buzzfeedfood,foodnetwork,spoonforkbacon
