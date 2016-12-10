@@ -8,6 +8,7 @@ import sys
 from bs4 import BeautifulSoup
 
 
+
 def pop_text_file(file):
     with open(file, 'rb') as fin:
         data = fin.read().splitlines(True)

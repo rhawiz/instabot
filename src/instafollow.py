@@ -25,9 +25,16 @@ class InstaFollow:
         self.password = password
         self.similar_users = similar_users
         self.users_file_path = "../data/{}_users.txt".format(self.username)
+        self.log_file = "{}_log.txt".format(self.username)
+
+    def print_and_log(self, file, text):
+        print text
+        with open(file, "ab") as f:
+            f.write("{}\n".format(text))
 
     def _get_user_ids(self, save_to):
-        print "Gathering user ids..."
+        self.print_and_log("Gathering user ids...")
+
         # Randomly select root account to search for users
         root_acc = self.similar_users[randint(0, len(self.similar_users) - 1)]
         self.API.search_username(root_acc)
@@ -63,9 +70,9 @@ class InstaFollow:
 
         user_accounts = list(set(user_accounts))
 
-        print "\tFound {} new users".format(len(user_accounts))
+        self.print_and_log("\tFound {} new users".format(len(user_accounts)))
 
-        print "\t\tSaving to {}".format(save_to)
+        self.print_and_log("\t\tSaving to {}".format(save_to))
 
         for id, username in user_accounts:
             append_to_file("{},{}\n".format(id, username), save_to)
@@ -82,7 +89,7 @@ class InstaFollow:
 
     def start(self, follows, wait):
         start_time = datetime.datetime.now()
-        print "Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M"))
+        self.print_and_log("Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M")))
 
         self.API = InstagramAPI(self.username, self.password)
 
@@ -96,20 +103,20 @@ class InstaFollow:
                 try:
                     users = csv_to_list(self.users_file_path)
                 except IOError, e:
-                    print "No user list found..."
+                    self.print_and_log("No user list found...")
 
                 if not len(users):
                     users = self._get_user_ids(save_to=self.users_file_path)
-                print "Starting...{} new users.".format(len(users))
+                self.print_and_log("Starting...{} new users.".format(len(users)))
 
                 wait_seconds = wait * 60
                 self._follow_users(users, follows, wait_seconds)
                 break
             except Exception, e:
-                print e
+                self.print_and_log(e)
                 attempts += 1
         end_time = datetime.datetime.now()
-        print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
+        self.print_and_log("Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M")))
 
     def _follow_users(self, users, follows, wait):
         fail_count = 0
@@ -118,29 +125,29 @@ class InstaFollow:
             progress += 1
             id, username = users.pop(0)
             pop_text_file(self.users_file_path)
-            print "{} following user {}({})".format(self.username, username, id)
+            self.print_and_log("{} following user {}({})".format(self.username, username, id))
             status = self.API.follow(id)
             if status:
                 fail_count = 0
             elif not status:
-                print self.API.last_response.content
+                self.print_and_log(self.API.last_response.content)
                 fail_count += 1
 
-            print "\tresponse: {}".format(self.API.last_response.content)
+            self.print_and_log("\tresponse: {}".format(self.API.last_response.content))
 
             if fail_count == 3:
-                print "3 failed follow requests in a row. Sleeping for 10 mins"
+                self.print_and_log("3 failed follow requests in a row. Sleeping for 10 mins")
                 sleep(1200)
             elif fail_count > 10:
                 wait_time = randint(21600, 28800)
-                print "10 failed follow requests in a row. Sleeping for {} mins".format(wait_time / 60)
+                self.print_and_log("10 failed follow requests in a row. Sleeping for {} mins".format(wait_time / 60))
                 sleep(wait_time)
             if not (progress % follows):
                 if wait < 1:
                     wait_time = randint(2700, 4500)
                 else:
                     wait_time = wait
-                print "{} requests sent. Sleeping for {} mins".format(follows, wait_time / 60)
+                self.print_and_log("{} requests sent. Sleeping for {} mins".format(follows, wait_time / 60))
                 sleep(wait_time)
 
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
