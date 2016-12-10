@@ -27,9 +27,9 @@ class InstaFollow:
         self.users_file_path = "../data/{}_users.txt".format(self.username)
         self.log_file = "{}_log.txt".format(self.username)
 
-    def print_and_log(self, file, text):
+    def print_and_log(self, text):
         print text
-        with open(file, "ab") as f:
+        with open(self.log_file, "ab") as f:
             f.write("{}\n".format(text))
 
     def _get_user_ids(self, save_to):
