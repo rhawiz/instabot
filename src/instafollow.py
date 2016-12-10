@@ -145,10 +145,6 @@ class InstaFollow:
 
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
 
-            # write_to_file("", self.users_file_path)
-            # for id, username in users:
-            #     append_to_file("{},{}\n".format(id, username), self.users_file_path)
-
 
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
