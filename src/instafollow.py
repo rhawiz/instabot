@@ -20,11 +20,10 @@ from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_
 
 
 class InstaFollow:
-    def __init__(self, username, password, account_list, subreddits):
+    def __init__(self, username, password, account_list):
         self.username = username
         self.password = password
         self.account_list = account_list
-        self.subreddit_list = subreddits
         self.users_file_path = "../data/{}_users.txt".format(self.username)
 
     def _get_account_ids(self, save_to):
@@ -47,7 +46,7 @@ class InstaFollow:
                 media_ids.append(media[u"id"])
             maxid = self.API.last_json[u"next_max_id"]
 
-        print media_ids
+        print "\tFound {} new users".format(len(media_ids))
         account_ids = []
 
         for media_id in media_ids:
@@ -71,7 +70,7 @@ class InstaFollow:
             followers.append((details[u"pk"], details[u"username"]))
         return followers
 
-    def start(self, unfollow):
+    def start(self, follows, wait):
         start_time = datetime.datetime.now()
         print "Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M"))
 
@@ -81,19 +80,20 @@ class InstaFollow:
         while attempts <= 5:
             try:
                 self.API.login()
-                followers = []
-                if unfollow:
-                    followers = self._get_followers()
+                # followers = self._get_followers()
                 users = []
 
                 try:
                     users = csv_to_list(self.users_file_path)
                 except IOError, e:
                     print "No user list found..."
+
                 if not len(users):
                     users = self._get_account_ids(save_to=self.users_file_path)
-                print "Starting...{} new users and {} followers.".format(len(users), len(followers))
-                self.follow_unfollow_users(users, followers)
+                print "Starting...{} new users.".format(len(users))
+
+                wait_seconds = wait * 60
+                self._follow_users(users, follows, wait_seconds)
                 break
             except Exception, e:
                 print e
@@ -101,46 +101,36 @@ class InstaFollow:
         end_time = datetime.datetime.now()
         print "Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M"))
 
-    def follow_unfollow_users(self, users, followers):
-        unfollow_fail_count = 0
-        follow_fail_count = 0
+    def _follow_users(self, users, follows, wait):
+        fail_count = 0
         progress = 0
         while users:
             progress += 1
-            if progress % 5 > 0 or not len(followers):
-                id, username = users.pop(0)
-                print "{} following user {}({})".format(self.username, username, id)
-                status = self.API.follow(id)
-                if status:
-                    follow_fail_count = 0
-                elif not status:
-                    print self.API.last_response.content
-                    follow_fail_count += 1
-            else:
-                id, username = followers.pop()
-                print "{} unfollowing user {}({})".format(self.username, username, id)
-                status = self.API.unfollow(id)
-                if status:
-                    unfollow_fail_count = 0
-                elif not status:
-                    print self.API.last_response.content
-                    unfollow_fail_count += 1
+            id, username = users.pop(0)
+            print "{} following user {}({})".format(self.username, username, id)
+            status = self.API.follow(id)
+            if status:
+                fail_count = 0
+            elif not status:
+                print self.API.last_response.content
+                fail_count += 1
 
-            print "\tstatus:{}".format(status)
+            print "tresponse: {}".format(self.API.last_response.content)
 
-            if follow_fail_count == 3:
+            if fail_count == 3:
                 print "3 failed follow requests in a row. Sleeping for 10 mins"
                 sleep(1200)
-            elif follow_fail_count > 10:
-                rnd_wait = randint(21600, 28800)
-                print "10 failed follow requests in a row. Sleeping for {} mins".format(rnd_wait / 60)
-                sleep(rnd_wait)
-
-            # Sleep between 30mins and 45mins ever 150 requests
-            if not (progress % 100):  # if divisible/modulus 60 is not 0 (if not == if not zero) then do. i.e. every 60
-                rnd_wait = randint(1800, 2700)
-                print "100 requests sent. Sleeping for {} mins".format(rnd_wait / 60)
-                sleep(rnd_wait)
+            elif fail_count > 10:
+                wait_time = randint(21600, 28800)
+                print "10 failed follow requests in a row. Sleeping for {} mins".format(wait_time / 60)
+                sleep(wait_time)
+            if not (progress % follows):
+                if wait < 1:
+                    wait_time = randint(2700, 4500)
+                else:
+                    wait_time = wait
+                print "{} requests sent. Sleeping for {} mins".format(follows, wait_time / 60)
+                sleep(wait_time)
 
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
 
@@ -150,16 +140,15 @@ class InstaFollow:
 
 
 @click.command()
-@click.option('--account', default='hwzfit', prompt='Account: ', help='Instagram account name')
-@click.option('--unfollow', is_flag=True, prompt='Unfollow: ', help='Unfollow users')
-def main(account, unfollow):
-    account_list = accounts[account]["similar_ig_users"]
-    subreddits = accounts[account]["subreddits"]
-    username = accounts[account]["username"]
-    password = accounts[account]["password"]
+@click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
+@click.option('--password', default='', prompt='Password:', help='Instagram account name')
+@click.option('--follows', default=100, prompt='Follows per cycle:', help='Follow user rate')
+@click.option('--wait', default=-1, prompt='Minutes between requests (-1 for random):', help='Follow user rate')
+def main(username, password, follows, wait):
+    account_list = accounts[username]["similar_ig_users"]
 
-    bot = InstaFollow(username, password, account_list, subreddits)
-    bot.start(unfollow=unfollow)
+    bot = InstaFollow(username, password, account_list)
+    bot.start(follows, wait)
 
 
 if __name__ == "__main__":
