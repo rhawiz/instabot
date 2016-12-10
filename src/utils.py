@@ -8,6 +8,13 @@ import sys
 from bs4 import BeautifulSoup
 
 
+def pop_text_file(file):
+    with open(file, 'rb') as fin:
+        data = fin.read().splitlines(True)
+    with open(file, 'wb') as fout:
+        fout.writelines(data[1:])
+
+
 def append_to_file(string, file):
     with open(file, "ab") as f:
         f.write(string)
@@ -70,7 +77,6 @@ def text_to_list(file):
     for row in data:
         row = re.sub("\n", "", row)
         content.append(row)
-
 
     return content
 

@@ -16,20 +16,20 @@ from configs import accounts
 from netutils import generate_request_header
 
 from instagramapi import InstagramAPI
-from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file
+from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file, pop_text_file
 
 
 class InstaFollow:
-    def __init__(self, username, password, account_list):
+    def __init__(self, username, password, similar_users):
         self.username = username
         self.password = password
-        self.account_list = account_list
+        self.similar_users = similar_users
         self.users_file_path = "../data/{}_users.txt".format(self.username)
 
-    def _get_account_ids(self, save_to):
+    def _get_user_ids(self, save_to):
         print "Gathering user ids..."
         # Randomly select root account to search for users
-        root_acc = self.account_list[randint(0, len(self.subreddit_list) - 1)]
+        root_acc = self.similar_users[randint(0, len(self.similar_users) - 1)]
         self.API.search_username(root_acc)
 
         # Get root account id
@@ -46,8 +46,7 @@ class InstaFollow:
                 media_ids.append(media[u"id"])
             maxid = self.API.last_json[u"next_max_id"]
 
-        print "\tFound {} new users".format(len(media_ids))
-        account_ids = []
+        user_accounts = []
 
         for media_id in media_ids:
             self.API.get_media_likers(media_id)
@@ -56,11 +55,22 @@ class InstaFollow:
             except ChunkedEncodingError, e:
                 "Failed to retrieve user list"
                 users = []
-            for user in users:
-                append_to_file("{},{}\n".format(user[u"pk"], user[u"username"]), save_to)
-                account_ids.append((user[u"pk"], user[u"username"]))
 
-        return account_ids
+            for user in users:
+                id = user[u"pk"]
+                username = user[u"username"]
+                user_accounts.append((id, username))
+
+        user_accounts = list(set(user_accounts))
+
+        print "\tFound {} new users".format(len(user_accounts))
+
+        print "\t\tSaving to {}".format(save_to)
+
+        for id, username in user_accounts:
+            append_to_file("{},{}\n".format(id, username), save_to)
+
+        return user_accounts
 
     def _get_followers(self):
 
@@ -89,7 +99,7 @@ class InstaFollow:
                     print "No user list found..."
 
                 if not len(users):
-                    users = self._get_account_ids(save_to=self.users_file_path)
+                    users = self._get_user_ids(save_to=self.users_file_path)
                 print "Starting...{} new users.".format(len(users))
 
                 wait_seconds = wait * 60
@@ -107,6 +117,7 @@ class InstaFollow:
         while users:
             progress += 1
             id, username = users.pop(0)
+            pop_text_file(self.users_file_path)
             print "{} following user {}({})".format(self.username, username, id)
             status = self.API.follow(id)
             if status:
@@ -115,7 +126,7 @@ class InstaFollow:
                 print self.API.last_response.content
                 fail_count += 1
 
-            print "tresponse: {}".format(self.API.last_response.content)
+            print "\tresponse: {}".format(self.API.last_response.content)
 
             if fail_count == 3:
                 print "3 failed follow requests in a row. Sleeping for 10 mins"
@@ -134,9 +145,9 @@ class InstaFollow:
 
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
 
-        write_to_file("", self.users_file_path)
-        for id, username in users:
-            append_to_file("{},{}\n".format(id, username), self.users_file_path)
+            # write_to_file("", self.users_file_path)
+            # for id, username in users:
+            #     append_to_file("{},{}\n".format(id, username), self.users_file_path)
 
 
 @click.command()
@@ -144,10 +155,11 @@ class InstaFollow:
 @click.option('--password', default='', prompt='Password:', help='Instagram account name')
 @click.option('--follows', default=100, prompt='Follows per cycle:', help='Follow user rate')
 @click.option('--wait', default=-1, prompt='Minutes between requests (-1 for random):', help='Follow user rate')
-def main(username, password, follows, wait):
-    account_list = accounts[username]["similar_ig_users"]
+@click.option('--similar_users', default='', prompt='Similar users accounts:', help='Similar user accounts')
+def main(username, password, follows, wait, similar_users):
+    similar_users = similar_users.split(",")
 
-    bot = InstaFollow(username, password, account_list)
+    bot = InstaFollow(username, password, similar_users)
     bot.start(follows, wait)
 
 
