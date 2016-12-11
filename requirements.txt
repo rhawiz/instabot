@@ -1,0 +1,4 @@
+click==6.6
+moviepy==0.2.2.11
+requests==2.11.1
+requests-toolbelt==0.7.0
