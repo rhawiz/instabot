@@ -9,7 +9,7 @@ from src.netutils import generate_request_header
 
 
 class ContentCollector:
-    REDDIT_URL = "https://www.reddit.com/r/{}/top/?sort={}&t={}&count={}"
+    REDDIT_URL = "https://www.reddit.com/r/{}/top/?sort=top&t={}&count={}"
     TUMBLR_URL = "https://www.tumblr.com/search/{}"
 
     def _get_reddit_content(self, subreddit, sort):
@@ -53,10 +53,17 @@ class ContentCollector:
 
                     file_name += temp + "_"
 
-                # TODO: Save file to relevant location
-                # file_name = "{}.{}".format(file_name, extension)
-                # resource = urllib.urlopen(url)
-                # path = "../data/hwzfit/{}".format(file_name)
-                # output = open(path, "wb+")
-                # output.write(resource.read())
-                # output.close()
+                    # TODO: Save file to relevant location
+                    # file_name = "{}.{}".format(file_name, extension)
+                    # resource = urllib.urlopen(url)
+                    # path = "../data/hwzfit/{}".format(file_name)
+                    # output = open(path, "wb+")
+                    # output.write(resource.read())
+                    # output.close()
+
+
+
+if __name__ == '__main__':
+    collector = ContentCollector()
+    while True:
+        collector._get_reddit_content("earthporn", "month")
