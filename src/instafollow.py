@@ -25,7 +25,7 @@ class InstaFollow:
         self.password = password
         self.similar_users = similar_users
         self.users_file_path = "../data/{}_users.txt".format(self.username)
-        self.log_file = "{}_log.txt".format(self.username)
+        self.log_file = "{}_instafollow.log".format(self.username)
 
     def print_and_log(self, text):
         print text
@@ -79,15 +79,7 @@ class InstaFollow:
 
         return user_accounts
 
-    def _get_followers(self):
-
-        followers_details = self.API.get_total_followings(username_id=self.API.username_id)
-        followers = []
-        for details in followers_details:
-            followers.append((details[u"pk"], details[u"username"]))
-        return followers
-
-    def start(self, follows, wait):
+    def start(self, rate, wait):
         start_time = datetime.datetime.now()
         self.print_and_log("Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M")))
 
@@ -109,8 +101,7 @@ class InstaFollow:
                     users = self._get_user_ids(save_to=self.users_file_path)
                 self.print_and_log("Starting...{} new users.".format(len(users)))
 
-                wait_seconds = wait * 60
-                self._follow_users(users, follows, wait_seconds)
+                self._follow_users(users, rate, wait)
                 break
             except Exception, e:
                 self.print_and_log(e)
@@ -118,7 +109,7 @@ class InstaFollow:
         end_time = datetime.datetime.now()
         self.print_and_log("Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M")))
 
-    def _follow_users(self, users, follows, wait):
+    def _follow_users(self, users, rate, wait):
         fail_count = 0
         progress = 0
         while users:
@@ -130,7 +121,6 @@ class InstaFollow:
             if status:
                 fail_count = 0
             elif not status:
-                self.print_and_log(self.API.last_response.content)
                 fail_count += 1
 
             self.print_and_log("\tresponse: {}".format(self.API.last_response.content))
@@ -142,12 +132,9 @@ class InstaFollow:
                 wait_time = randint(21600, 28800)
                 self.print_and_log("10 failed follow requests in a row. Sleeping for {} mins".format(wait_time / 60))
                 sleep(wait_time)
-            if not (progress % follows):
-                if wait < 1:
-                    wait_time = randint(2700, 4500)
-                else:
-                    wait_time = wait
-                self.print_and_log("{} requests sent. Sleeping for {} mins".format(follows, wait_time / 60))
+            if not (progress % rate):
+                wait_time = randint(wait[0], wait[1])
+                self.print_and_log("{} requests sent. Sleeping for {} mins".format(rate, wait_time / 60))
                 sleep(wait_time)
 
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
@@ -156,14 +143,27 @@ class InstaFollow:
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
 @click.option('--password', default='', prompt='Password:', help='Instagram account name')
-@click.option('--follows', default=100, prompt='Follows per cycle:', help='Follow user rate')
-@click.option('--wait', default=-1, prompt='Minutes between requests (-1 for random):', help='Follow user rate')
+@click.option('--rate', default=100, prompt='# Follows per cycle:', help='Follow user rate')
+@click.option('--wait', default="60,90", prompt='Minutes between requests (min,max):', help='Follow user rate')
 @click.option('--similar_users', default='', prompt='Similar users accounts:', help='Similar user accounts')
-def main(username, password, follows, wait, similar_users):
+def main(username, password, rate, wait, similar_users):
     similar_users = similar_users.split(",")
 
     bot = InstaFollow(username, password, similar_users)
-    bot.start(follows, wait)
+
+    wait_parts = wait.split(",")
+
+    min = 60
+    max = 90
+    if len(wait_parts) == 1:
+        min = int(wait_parts[0].strip())
+        max = min
+    elif len(wait_parts) > 2:
+        min = int(wait_parts[0].strip())
+        max = int(wait_parts[-1].strip())
+
+    wait_sec = (min * 60, max * 60)
+    bot.start(rate, wait_sec)
 
 
 if __name__ == "__main__":
