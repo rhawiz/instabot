@@ -15,7 +15,7 @@ class InstaUnfollow:
         self.password = password
         self.log_file = "{}_instaunfollow.log".format(self.username)
 
-    def _get_unfollow_list(self, all):
+    def _get_unfollow_list(self):
 
         # Get people followings
         following_details = self.API.get_total_followings(username_id=self.API.username_id)
@@ -27,9 +27,6 @@ class InstaUnfollow:
             if pk:
                 followings.append((pk, username))
         followings = set(followings)
-
-        if all:
-            return list(followings)
 
         # Get all followers
         followers_details = self.API.get_total_followers(username_id=self.API.username_id)
@@ -52,7 +49,7 @@ class InstaUnfollow:
         with open(self.log_file, "ab") as f:
             f.write("{}\n".format(text))
 
-    def start(self, rate, wait, unfollow_all):
+    def start(self, rate, wait):
         start_time = datetime.datetime.now()
         self.print_and_log("Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M")))
 
@@ -63,7 +60,7 @@ class InstaUnfollow:
             try:
                 self.API.login()
 
-                unfollow_list = self._get_unfollow_list(all=unfollow_all)
+                unfollow_list = self._get_unfollow_list()
                 self.print_and_log("Starting...unfollowing {} followers.".format(len(unfollow_list)))
 
                 wait_seconds = wait * 60
@@ -111,8 +108,7 @@ class InstaUnfollow:
 @click.option('--password', default='', prompt='Password:', help='Instagram password')
 @click.option('--rate', default=100, prompt='Unfollows per cycle:', help='Unfollow user rate')
 @click.option('--wait', default="60,90", prompt='Minutes between requests (-1 for random):', help='Follow user rate')
-@click.option('--unfollow_all', is_flag=True, default=False, prompt='Unfollow all followings:', help='Follow user rate')
-def main(username, password, rate, wait, unfollow_all):
+def main(username, password, rate, wait):
     bot = InstaUnfollow(username, password)
 
     wait_parts = wait.split(",")
@@ -128,7 +124,7 @@ def main(username, password, rate, wait, unfollow_all):
 
     wait_sec = (min * 60, max * 60)
 
-    bot.start(rate, wait_sec, unfollow_all)
+    bot.start(rate, wait_sec)
 
 
 if __name__ == '__main__':
