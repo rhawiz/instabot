@@ -148,6 +148,8 @@ class InstaFollow:
 @click.option('--similar_users', default='', prompt='Similar users accounts:', help='Similar user accounts')
 def main(username, password, rate, wait, similar_users):
     similar_users = similar_users.split(",")
+    for idx, user in enumerate(similar_users):
+        similar_users[idx] = user.strip()
 
     bot = InstaFollow(username, password, similar_users)
 
