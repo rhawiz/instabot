@@ -20,6 +20,7 @@
     * **rate:** Number of followers per wait period (e.g 100)
     * **wait:** Wait time between x follows in seconds (e.g. 60,90)
     * **similar_users:** Similar user accounts to retrieve user list seperated by a comma (,) (e.g. ig_user1,ig_user2,ig_user3)
+
 ###Instaunfollow
  * clone repo with ```git clone https://github.com/rhawiz/instabot.git``` or download through github.
  * ```cd instabot/src```
