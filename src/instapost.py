@@ -1,7 +1,7 @@
 from src.instagramapi import InstagramAPI
 
 if __name__ == '__main__':
-    api = InstagramAPI("hwzearth", "raw12743")
+    api = InstagramAPI("hwzearth", "")
     api.login()
 
     #api.upload_photo("../data/content/Bora_Bora_Lagoon.jpg", "Bora Bora Island, French Polynesia. #earth #earthporn #scenery #photography #bora #borabora #island #french #polynesia")
