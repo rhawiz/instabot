@@ -106,9 +106,11 @@ class InstaUnfollow:
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram username')
 @click.option('--password', default='', prompt='Password:', help='Instagram password')
-@click.option('--rate', default=100, prompt='Unfollows per cycle:', help='Unfollow user rate')
+@click.option('--rate', default=50, prompt='Unfollows per cycle:', help='Unfollow user rate')
 @click.option('--wait', default="60,90", prompt='Minutes between requests (-1 for random):', help='Follow user rate')
-def main(username, password, rate, wait):
+@click.option('--unfollow_all', is_flag=True, default=False,
+              help='Include this to unfollow all users, dont include to only unfollow those not following back')
+def main(username, password, rate, wait, unfollow_all):
     bot = InstaUnfollow(username, password)
 
     wait_parts = wait.split(",")
