@@ -15,7 +15,7 @@ class InstaUnfollow:
         self.password = password
         self.log_file = "{}_instaunfollow.log".format(self.username)
 
-    def _get_unfollow_list(self):
+    def _get_unfollow_list(self, unfollow_all):
 
         # Get people followings
         following_details = self.API.get_total_followings(username_id=self.API.username_id)
@@ -26,6 +26,10 @@ class InstaUnfollow:
             username = details.get(u"username", None)
             if pk:
                 followings.append((pk, username))
+
+        if unfollow_all:
+            return followings
+
         followings = set(followings)
 
         # Get all followers
@@ -49,7 +53,7 @@ class InstaUnfollow:
         with open(self.log_file, "ab") as f:
             f.write("{}\n".format(text))
 
-    def start(self, rate, wait):
+    def start(self, rate, wait, unfollow_all):
         start_time = datetime.datetime.now()
         self.print_and_log("Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M")))
 
@@ -60,7 +64,7 @@ class InstaUnfollow:
             try:
                 self.API.login()
 
-                unfollow_list = self._get_unfollow_list()
+                unfollow_list = self._get_unfollow_list(unfollow_all)
                 self.print_and_log("Starting...unfollowing {} followers.".format(len(unfollow_list)))
 
                 wait_seconds = wait * 60
@@ -126,7 +130,7 @@ def main(username, password, rate, wait, unfollow_all):
 
     wait_sec = (min * 60, max * 60)
 
-    bot.start(rate, wait_sec)
+    bot.start(rate, wait_sec, unfollow_all)
 
 
 if __name__ == '__main__':

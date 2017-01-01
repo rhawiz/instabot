@@ -12,7 +12,7 @@
  
 ###Instafollow
  * clone repo with ```git clone https://github.com/rhawiz/instabot.git``` or download through github.
- * ```cd instabot/src```
+ * ```cd instabot/instabot```
  * run ```python instafollow.py --username <param> --password <param> --rate <param> --wait <param> --similar_users <param>```
  * params
     * **username:** Account username
@@ -23,7 +23,7 @@
 
 ###Instaunfollow
  * clone repo with ```git clone https://github.com/rhawiz/instabot.git``` or download through github.
- * ```cd instabot/src```
+ * ```cd instabot/instabot```
  * run ```python instaunfollow.py --username <param> --password <param> --rate <param> --wait <param> --unfollow```
  * params
     * **username:** Account username

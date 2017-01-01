@@ -5,7 +5,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from src.netutils import generate_request_header
+from instabot.netutils import generate_request_header
 
 
 class ContentCollector:
@@ -40,8 +40,8 @@ class ContentCollector:
             content = container.find(name="img")
             tags_container = container.findAll(name="a", attrs={"class": "post_tag"})
 
-            if hasattr(content, "src"):
-                url = content["src"]
+            if hasattr(content, "instabot"):
+                url = content["instabot"]
                 tags = []
 
                 for tag in tags_container:
