@@ -12,7 +12,6 @@ import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import ChunkedEncodingError
 
-from configs import accounts
 from netutils import generate_request_header
 
 from instagramapi import InstagramAPI
