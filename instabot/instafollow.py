@@ -85,7 +85,7 @@ class InstaFollow:
         self.API = InstagramAPI(self.username, self.password)
 
         attempts = 0
-        while attempts <= 5:
+        while attempts <= 10:
             try:
                 self.API.login()
                 # followers = self._get_followers()
@@ -94,7 +94,7 @@ class InstaFollow:
                 try:
                     users = csv_to_list(self.users_file_path)
                 except IOError, e:
-                    self.print_and_log("No user list found...")
+                    self.print_and_log("No user list found...with error {}\n".format(e))
 
                 if not len(users):
                     users = self._get_user_ids(save_to=self.users_file_path)
