@@ -19,15 +19,27 @@ def collect_followers(username, password, similar_users):
     unfollow_bot = InstaUnfollow(username, password)
 
     while True:
-        follow_bot.start(75, (75, 150))
+        try:
+            follow_bot.start(75, (75, 150))
+        except Exception:
+            pass
 
-        unfollow_bot.start(75, (75, 150), True)
+        try:
+            unfollow_bot.start(75, (75, 150), True)
+        except Exception:
+            pass
 
 
 def post_contents(username, password):
     while True:
-        content = execute_query(DB_PATH, SELECT_SQL.format(user=username))
-        if not len(content):
+        try:
+            content = execute_query(DB_PATH, SELECT_SQL.format(user=username))
+
+            if not len(content):
+                continue
+
+        except Exception, e:
+            print e
             continue
 
         api = InstagramAPI(username, password)
@@ -41,7 +53,6 @@ def post_contents(username, password):
 
         except Exception, e:
             print e
-
 
         # Sleep for 24 hours before posting new content
         sleep(86400)
