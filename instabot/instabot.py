@@ -1,3 +1,4 @@
+import threading
 from time import sleep
 
 import click
@@ -33,8 +34,10 @@ def post_contents(username, password):
             continue
 
         caption, path = content[0]
-
-        api.upload_photo(path, caption)
+        try:
+            api.upload_photo(path, caption)
+        except Exception, e:
+            print e
 
         execute_query(DB_PATH, DELETE_SQL.format(user=username))
 
@@ -51,7 +54,14 @@ def main(username, password, similar_users):
     for idx, user in enumerate(similar_users):
         similar_users[idx] = user.strip()
 
-    post_contents(username, password)
+    t1 = threading.Thread(target=post_contents, args=(username, password,))
+    t2 = threading.Thread(target=collect_followers, args=(username, password, similar_users,))
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
 
 
 if __name__ == "__main__":
