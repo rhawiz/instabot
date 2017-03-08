@@ -36,10 +36,12 @@ def post_contents(username, password):
         caption, path = content[0]
         try:
             api.upload_photo(path, caption)
+            print "Uploaded {} with caption {}".format(path, caption)
+            execute_query(DB_PATH, DELETE_SQL.format(user=username))
+
         except Exception, e:
             print e
 
-        execute_query(DB_PATH, DELETE_SQL.format(user=username))
 
         # Sleep for 24 hours before posting new content
         sleep(86400)
