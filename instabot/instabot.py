@@ -25,13 +25,13 @@ def collect_followers(username, password, similar_users):
 
 
 def post_contents(username, password):
-    api = InstagramAPI(username, password)
-    api.login()
-
     while True:
         content = execute_query(DB_PATH, SELECT_SQL.format(user=username))
         if not len(content):
             continue
+
+        api = InstagramAPI(username, password)
+        api.login()
 
         caption, path = content[0]
         try:
