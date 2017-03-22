@@ -25,7 +25,7 @@ def collect_followers(username, password, similar_users):
             pass
 
         try:
-            unfollow_bot.start(75, (75, 150), True)
+            unfollow_bot.start(rate=75, wait=(75, 150), unfollow_all=True)
         except Exception:
             pass
 
