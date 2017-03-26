@@ -56,12 +56,13 @@ def upload_file():
     return render_template('upload_content.html')
 
 
-
-@click.command()
-@click.option('--host', '-h', default='0.0.0.0', prompt='host:', help='Host')
-@click.option('--port','-p', default='5000', prompt='port:', help='Port')
-def main(host, port):
-    app.run(host=host, port=port)
+#
+# @click.command()
+# @click.option('--host', '-h', default='0.0.0.0', prompt='host:', help='Host')
+# @click.option('--port','-p', default='5000', prompt='port:', help='Port')
+# def main(host, port):
+#     app.run(host=host, port=port)
 
 if __name__ == '__main__':
-    main()
+    app.run(host="0.0.0.0", port="5000")
+    #main()

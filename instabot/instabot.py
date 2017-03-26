@@ -52,7 +52,7 @@ def post_contents(username, password):
             execute_query(DB_PATH, DELETE_SQL.format(user=username))
 
         except Exception, e:
-            print e
+           snt e
 
         # Sleep for 24 hours before posting new content
         sleep(86400)
