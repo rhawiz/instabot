@@ -1,4 +1,4 @@
-from instabot.contentuploader import app
+from contentuploader import app
 
 if __name__ == "__main__":
     app.run()
