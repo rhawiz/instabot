@@ -2,5 +2,6 @@
 
 sudo chown -R rawandhawiz:rawandhawiz ..
 sudo chown root:root ngrok
+sudo chmod +x ngrok
 python contentuploader.py &
 ./ngrok http 5000 &
