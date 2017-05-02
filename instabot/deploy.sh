@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-sudo chown rawandhawiz:rawandhawiz .
+sudo chown -R rawandhawiz:rawandhawiz ..
 python contentuploader.py &
 ./ngrok http 5000 &
