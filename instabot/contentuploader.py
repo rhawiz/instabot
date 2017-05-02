@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 
 from dbutils import execute_query
 
-UPLOAD_FOLDER = '..\\data\\content'
+UPLOAD_FOLDER = 'content'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
@@ -20,7 +20,7 @@ my_loader = jinja2.ChoiceLoader([
 ])
 app.jinja_loader = my_loader
 
-DB_PATH = "..\\data\\content.db"
+DB_PATH = "content.db"
 INSERT_QUERY = "INSERT INTO insta_content ('user', 'caption', 'path')  VALUES ('{user}', '{caption}', '{path}');"
 
 
