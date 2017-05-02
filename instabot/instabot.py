@@ -13,7 +13,6 @@ DB_PATH = "../data/content.db"
 SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1"
 DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1)"
 
-
 def collect_followers(username, password, similar_users):
     follow_bot = InstaFollow(username, password, similar_users)
     unfollow_bot = InstaUnfollow(username, password)
@@ -52,10 +51,32 @@ def post_contents(username, password):
             execute_query(DB_PATH, DELETE_SQL.format(user=username))
 
         except Exception, e:
-           snt e
+           print e
 
         # Sleep for 24 hours before posting new content
         sleep(86400)
+
+def get_user_content(user):
+    content = None
+    CSV_PATH = "";
+    with open(CSV_PATH, 'rb') as fin:
+        data = fin.read().splitlines(True)
+        for i, line in enumerate(data):
+            u = line.split("   ")[0]
+            if u == user:
+                content = data.pop(i).split("   ")
+                break
+
+    if not content:
+        return []
+
+    with open(CSV_PATH, 'wb') as fout:
+        fout.writelines(data)
+
+    for i, col in content:
+        content[i] = col.strip()
+
+    return content
 
 
 @click.command()

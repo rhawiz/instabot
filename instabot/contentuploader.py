@@ -1,8 +1,6 @@
-import hashlib
 import os
 import uuid
 
-import click
 import jinja2
 from flask import Flask, request, redirect, url_for, flash
 from flask import render_template
@@ -17,9 +15,9 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 my_loader = jinja2.ChoiceLoader([
-        app.jinja_loader,
-        jinja2.FileSystemLoader(['../templates']),
-    ])
+    app.jinja_loader,
+    jinja2.FileSystemLoader(['../templates']),
+])
 app.jinja_loader = my_loader
 
 DB_PATH = "../data/content.db"
@@ -30,9 +28,11 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @app.route('/', methods=['GET'])
 def home():
     return "Instabot"
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
@@ -75,4 +75,4 @@ def upload_file():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port="5000")
-    #main()
+    # main()
