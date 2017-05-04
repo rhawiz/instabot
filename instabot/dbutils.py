@@ -48,7 +48,6 @@ def insert_row(db_path, table_name, row):
         connection.close()
         return False
 
-
 def create_database(db_path, table_name, columns):
     """
     Create sqlite database and tables

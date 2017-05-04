@@ -49,9 +49,12 @@ class InstaUnfollow:
         return unfollow_list
 
     def print_and_log(self, text):
-        print text
-        with open(self.log_file, "ab") as f:
-            f.write("{}\n".format(text))
+        try:
+            print text
+            with open(self.log_file, "ab") as f:
+                f.write("{}\n".format(text))
+        except Exception, e:
+            print "instaunfollow:print_and_log ", e
 
     def start(self, rate, wait, unfollow_all):
         start_time = datetime.datetime.now()
@@ -62,6 +65,7 @@ class InstaUnfollow:
         attempts = 0
         while attempts <= 5:
             try:
+                print attempts
                 self.API.login()
 
                 unfollow_list = self._get_unfollow_list(unfollow_all)
@@ -91,7 +95,6 @@ class InstaUnfollow:
                 fail_count += 1
 
             self.print_and_log("\tresponse: {}".format(self.API.last_response.content))
-
             if fail_count == 3:
                 self.print_and_log("3 failed follow requests in a row. Sleeping for 10 mins")
                 sleep(1200)
@@ -103,7 +106,6 @@ class InstaUnfollow:
                 wait_time = randint(wait[0], wait[1])
                 self.print_and_log("{} requests sent. Sleeping for {} mins".format(unfollows, wait_time / 60))
                 sleep(wait_time)
-
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
 
 
@@ -112,7 +114,7 @@ class InstaUnfollow:
 @click.option('--password', default='', prompt='Password:', help='Instagram password')
 @click.option('--rate', default=50, prompt='Unfollows per cycle:', help='Unfollow user rate')
 @click.option('--wait', default="60,90", prompt='Minutes between requests (-1 for random):', help='Follow user rate')
-@click.option('--unfollow_all', is_flag=True, default=False,
+@click.option('--unfollow_all', is_flag=True, default=True,
               help='Include this to unfollow all users, dont include to only unfollow those not following back')
 def main(username, password, rate, wait, unfollow_all):
     bot = InstaUnfollow(username, password)

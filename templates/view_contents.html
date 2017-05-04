@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<body>
+<table>
+    <tr>
+        <td>
+            <b>user</b>
+        </td>
+        <td>
+            <b>caption</b>
+        </td>
+        <td>
+            <b>path</b>
+        </td>
+        <td>
+            <b>date</b>
+        </td>
+    </tr>
+    {% for user, caption, path, date in content %}
+    <tr>
+        <td>
+            {{user}}
+        </td>
+        <td>
+            {{caption}}
+        </td>
+        <td>
+            {{path}}
+        </td>
+        <td>
+            {{date}}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

@@ -9,27 +9,30 @@ from instafollow import InstaFollow
 
 from instaunfollow import InstaUnfollow
 
-DB_PATH = "../data/content.db"
+DB_PATH = "content.db"
 SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1"
 DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1)"
 
-def collect_followers(username, password, similar_users):
+
+def collect_followers(username, password, similar_users, rate=75, wait_min=75, wait_max=150):
     follow_bot = InstaFollow(username, password, similar_users)
     unfollow_bot = InstaUnfollow(username, password)
 
     while True:
         try:
-            follow_bot.start(75, (75, 150))
-        except Exception:
-            pass
+            unfollow_bot.start(rate=rate, wait=(wait_min * 60, wait_max * 60), unfollow_all=True)
+
+        except Exception, e:
+            print "instabot.py", e
 
         try:
-            unfollow_bot.start(rate=75, wait=(75, 150), unfollow_all=True)
-        except Exception:
-            pass
+            follow_bot.start(rate=rate, wait=(wait_min * 60, wait_max * 60))
+
+        except Exception, e:
+            print "instabot.py", e
 
 
-def post_contents(username, password):
+def post_contents(username, password, wait=86400):
     while True:
         try:
             content = execute_query(DB_PATH, SELECT_SQL.format(user=username))
@@ -38,7 +41,7 @@ def post_contents(username, password):
                 continue
 
         except Exception, e:
-            print e
+            print "instabot.py", e
             continue
 
         api = InstagramAPI(username, password)
@@ -51,10 +54,11 @@ def post_contents(username, password):
             execute_query(DB_PATH, DELETE_SQL.format(user=username))
 
         except Exception, e:
-           print e
+            print "instabot.py", e
 
         # Sleep for 24 hours before posting new content
-        sleep(86400)
+        sleep(wait)
+
 
 def get_user_content(user):
     content = None
@@ -83,7 +87,7 @@ def get_user_content(user):
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram username')
 @click.option('--password', prompt='Password:', hide_input=True, help='Instagram password')
 @click.option('--similar_users', default='', prompt='Similar users accounts:', help='Similar user accounts')
-def main(username, password, similar_users):
+def instabot(username, password, similar_users):
     similar_users = similar_users.split(",")
     for idx, user in enumerate(similar_users):
         similar_users[idx] = user.strip()
@@ -99,4 +103,4 @@ def main(username, password, similar_users):
 
 
 if __name__ == "__main__":
-    main()
+    instabot()

@@ -123,19 +123,19 @@ class InstaFollow:
                 fail_count += 1
 
             self.print_and_log("\tresponse: {}".format(self.API.last_response.content))
-
             if fail_count == 3:
                 self.print_and_log("3 failed follow requests in a row. Sleeping for 10 mins")
                 sleep(1200)
             elif fail_count > 10:
                 wait_time = randint(21600, 28800)
                 self.print_and_log("10 failed follow requests in a row. Sleeping for {} mins".format(wait_time / 60))
+                fail_count = 0
                 sleep(wait_time)
+
             if not (progress % rate):
                 wait_time = randint(wait[0], wait[1])
                 self.print_and_log("{} requests sent. Sleeping for {} mins".format(rate, wait_time / 60))
                 sleep(wait_time)
-
             sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
 
 
