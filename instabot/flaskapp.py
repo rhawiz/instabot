@@ -34,13 +34,17 @@ def allowed_file(filename):
 
 @app.route('/', methods=['GET'])
 def home():
-    return "Instabot"
+    return render_template('index.html')
 
 
 @app.route('/view', methods=['GET'])
 def view_contents():
     contents = execute_query(DB_PATH, VIEW_QUERY)
     return render_template('view_contents.html', content=contents)
+
+@app.route('/log', methods=['GET'])
+def log():
+    return "Log"
 
 
 @app.route('/run', methods=['GET', 'POST'])
