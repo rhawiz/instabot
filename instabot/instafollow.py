@@ -1,18 +1,11 @@
-# dilman1234
-
-import json
 from random import randint, uniform
 import datetime
 
-import re
 from time import sleep
 
 import click
-import requests
-from bs4 import BeautifulSoup
-from requests.exceptions import ChunkedEncodingError
 
-from netutils import generate_request_header
+from requests.exceptions import ChunkedEncodingError
 
 from instagramapi import InstagramAPI
 from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file, pop_text_file

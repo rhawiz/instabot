@@ -14,22 +14,40 @@ SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" OR
 DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1)"
 
 
-def collect_followers(username, password, similar_users, rate=75, wait_min=75, wait_max=150):
+def collect_followers(username, password, similar_users, follow_rate=75, unfollow_rate=75, wait=75):
     follow_bot = InstaFollow(username, password, similar_users)
     unfollow_bot = InstaUnfollow(username, password)
-
+    wait_min = wait * 0.9
+    wait_max = wait * 1.1
     while True:
         try:
-            unfollow_bot.start(rate=rate, wait=(wait_min * 60, wait_max * 60), unfollow_all=True)
+            unfollow_bot.start(rate=unfollow_rate, wait=(wait_min * 60, wait_max * 60), unfollow_all=True)
+        except Exception, e:
+            print e
+        try:
+            follow_bot.start(rate=follow_rate, wait=(wait_min * 60, wait_max * 60))
 
         except Exception, e:
-            print "instabot.py", e
+            print e
 
+
+def follow_bot(username, password, similar_users, rate=75, wait_min=75, wait_max=150):
+    follow_bot = InstaFollow(username, password, similar_users)
+    while True:
         try:
             follow_bot.start(rate=rate, wait=(wait_min * 60, wait_max * 60))
 
         except Exception, e:
-            print "instabot.py", e
+            print e
+
+
+def unfollow_bot(username, password, rate=75, wait_min=75, wait_max=150):
+    unfollow_bot = InstaUnfollow(username, password)
+    while True:
+        try:
+            unfollow_bot.start(rate=rate, wait=(wait_min * 60, wait_max * 60), unfollow_all=True)
+        except Exception, e:
+            print e
 
 
 def post_contents(username, password, wait=86400):
@@ -41,7 +59,6 @@ def post_contents(username, password, wait=86400):
                 continue
 
         except Exception, e:
-            print "instabot.py", e
             continue
 
         api = InstagramAPI(username, password)

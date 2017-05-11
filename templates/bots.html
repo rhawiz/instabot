@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Active Bots</title>
+</head>
+<body>
+<table>
+    <tr>
+        <td>
+            <h3>Follow/Unfollow Bot</h3>
+        </td>
+        <td>
+            <h3>Post Bot</h3>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form method=post action="/follow_bot" enctype="multipart/form-data">
+                Username: <input type=text name=username>
+                <br>
+                Password: <input type=password name=password>
+                <br>
+                Similar Users (separated by ,): <input type=text name=users>
+                <br>
+                Follows per cycle: <input type=number name=frate value="75">
+                <br>
+                Unfollows per cycle: <input type=number name=urate value="75">
+                <br>
+                Wait time between cycles (mins): <input type=number name=wait value="75">                <br>
+                <input type=submit value=Run>
+
+            </form>
+        </td>
+        <td>
+            <form method=post action="/post_bot" enctype="multipart/form-data">
+                Username: <input type=text name=username>
+                <br>
+                Password: <input type=password name=password>
+                <br>
+                Wait time per post (hrs): <input type=number name=post_rate value="24">
+                <br>
+                <input type=submit value=Run>
+
+            </form>
+        </td>
+    </tr>
+</table>
+<table>
+    <tr>
+        <td>
+            <b>Unix pid</b>
+        </td>
+        <td>
+            <b>Bot</b>
+        </td>
+        <td>
+            <b>Username</b>
+        </td>
+        <td>
+            <b>Follow/Unfollow/Post rate</b>
+        </td>
+        <td>
+            <b>Wait</b>
+        </td>
+        <td>
+            <b>Created at</b>
+        </td>
+        <td>
+            <b>ctrl</b>
+        </td>
+
+    </tr>
+
+    {% for pid, bot, username, rate, wait, created_at in content %}
+    <tr>
+        <td>
+            {{pid}}
+        </td>
+        <td>
+            {{bot}}
+        </td>
+        <td>
+            {{username}}
+        </td>
+        <td>
+            {{rate}}
+        </td>
+        <td>
+            {{wait}}
+        </td>
+        <td>
+            {{created_at}}
+        </td>
+        <td>
+            <form action="/stop" method="post">
+
+                <button type="submit" value={{pid}}>X</button>
+                <input type="hidden" value={{pid}} name="pid"/>
+            </form>
+
+        </td>
+
+    </tr>
+    {% endfor %}
+
+</table>
+
+
+</body>
+</html>

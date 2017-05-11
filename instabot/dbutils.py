@@ -3,12 +3,7 @@
 # Address Learning Machine - Database helper utilities
 # Contains helper functions for reading, writing and updating SQLite databases
 
-
-import os
-
 import sqlite3
-
-from utils import print_progress
 
 def insert_row(db_path, table_name, row):
     """Insert a list or tuple of items into a sqlite database table

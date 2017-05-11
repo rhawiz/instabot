@@ -1,6 +1,9 @@
 <!doctype html>
 <html>
 <body>
+
+
+
 <table>
     <tr>
         <td>
@@ -16,7 +19,8 @@
             <b>date</b>
         </td>
     </tr>
-    {% for user, caption, path, date in content %}
+
+    {% for id, user, caption, path, date in content %}
     <tr>
         <td>
             {{user}}
@@ -30,8 +34,33 @@
         <td>
             {{date}}
         </td>
+
+        <td>
+            <form action="/delete" method="post">
+
+                <button type="submit" value={{id}}>X</button>
+                <input type="hidden" value={{id}} name="id"/>
+            </form>
+
+        </td>
+
     </tr>
     {% endfor %}
+
 </table>
+
+<br>
+
+<form action="/upload" method="post" enctype="multipart/form-data">
+    Image: <input type="file" name="file">
+    <br>
+    User: <input type="text" name="user">
+    <br>
+    Caption: <input type="text" name="caption">
+    <input type="submit" value="Upload">
+
+</form>
+
+<br>
 </body>
 </html>
