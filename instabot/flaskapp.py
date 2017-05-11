@@ -163,7 +163,7 @@ def delete_content():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
-        url = request.form.get('url').strip()
+        url = request.form.get('url')
         user = request.form.get('user')
         caption = request.form.get('caption')
 
