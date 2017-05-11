@@ -56,7 +56,7 @@ processes = {}
 @app.route('/content', methods=['GET'])
 def view_contents():
     contents = execute_query(DB_PATH, RETRIEVE_CONTENT_QUERY)
-    return render_template('view_contents.html', content=contents)
+    return render_template('contents.html', content=contents)
 
 
 @app.route('/log', methods=['GET'])
@@ -163,9 +163,13 @@ def delete_content():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
+        url = request.form.get('url').strip()
+        user = request.form.get('user')
+        caption = request.form.get('caption')
+
         # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
+        if 'file' not in request.files and url =='':
+            #flash('No file part')
             return redirect(request.url)
         file = request.files['file']
         # if user does not select file, browser also
@@ -178,16 +182,13 @@ def upload_file():
             ext = fs.split(".")[-1]
             fn = "{}.{}".format(str(uuid.uuid4()), ext)
 
-            user = request.form.get('user')
-            caption = request.form.get('caption')
-
             path = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], fn))
 
             file.save(path)
 
             execute_query(DB_PATH, INSERT_CONTENT_QUERY.format(user=user, caption=caption, path=path))
 
-            # return render_template('view_contents.html', url=path, user=user, caption=caption)
+            # return render_template('contents.html', url=path, user=user, caption=caption)
             return redirect(url_for('view_contents'))
 
 
