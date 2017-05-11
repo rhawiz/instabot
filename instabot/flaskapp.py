@@ -132,6 +132,7 @@ def post_bot():
         username = request.form.get('username')
         password = request.form.get('password')
         post_rate_secs = float(post_rate) * 60.0
+        print post_rate_secs
         p = multiprocessing.Process(target=post_contents, args=(username, password, post_rate_secs))
         p.start()
 

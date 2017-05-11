@@ -10,8 +10,8 @@ from instafollow import InstaFollow
 from instaunfollow import InstaUnfollow
 
 DB_PATH = "content.db"
-SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1"
-DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY date DESC LIMIT 1)"
+SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" ORDER BY created_at DESC LIMIT 1"
+DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY created_at DESC LIMIT 1)"
 
 
 def collect_followers(username, password, similar_users, follow_rate=75, unfollow_rate=75, wait=75):
@@ -52,13 +52,15 @@ def unfollow_bot(username, password, rate=75, wait_min=75, wait_max=150):
 
 def post_contents(username, password, wait=86400):
     while True:
+
         try:
             content = execute_query(DB_PATH, SELECT_SQL.format(user=username))
-
+            print content
             if not len(content):
                 continue
 
         except Exception, e:
+            print e
             continue
 
         api = InstagramAPI(username, password)
