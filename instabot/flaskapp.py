@@ -89,9 +89,10 @@ def stop_bot():
         if p:
             try:
                 os.kill(int(pid), signal.SIGTERM)
-                processes.pop(pid)
             except OSError, e:
                 print e
+            finally:
+                processes.pop(pid)
     return redirect(url_for('active_bots'))
 
 
@@ -172,8 +173,8 @@ def upload_file():
         caption = request.form.get('caption')
 
         # check if the post request has the file part
-        if 'file' not in request.files and url =='':
-            #flash('No file part')
+        if 'file' not in request.files and url == '':
+            # flash('No file part')
             return redirect(request.url)
         file = request.files['file']
         # if user does not select file, browser also
