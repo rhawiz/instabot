@@ -1,5 +1,5 @@
 from random import randint, uniform
-from time import sleep
+from time import sleep, time
 
 import click
 
@@ -81,6 +81,7 @@ class InstaUnfollow:
     def _unfollow_users(self, unfollow_list, unfollows, wait):
         fail_count = 0
         progress = 0
+        t0 = time()
         while unfollow_list:
             progress += 1
             id, username = unfollow_list.pop(0)
@@ -102,9 +103,12 @@ class InstaUnfollow:
                 sleep(wait_time)
             if not (progress % unfollows):
                 wait_time = randint(wait[0], wait[1])
+                elapsed = time() - t0
+                wait_time = wait_time - elapsed if wait_time > elapsed else 1
                 self.print_and_log("{} requests sent. Sleeping for {} mins".format(unfollows, wait_time / 60))
                 sleep(wait_time)
-            sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
+                t0 = time()
+            sleep(uniform(11.0, 22.0))  # wait 1-4 secs between requests
 
 
 @click.command()

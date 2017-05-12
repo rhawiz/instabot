@@ -1,14 +1,14 @@
 from random import randint, uniform
 import datetime
 
-from time import sleep
+from time import sleep, time
 
 import click
 
 from requests.exceptions import ChunkedEncodingError
 
 from instagramapi import InstagramAPI
-from utils import list_to_csv, csv_to_list, text_to_list, append_to_file, write_to_file, pop_text_file
+from utils import csv_to_list, append_to_file, pop_text_file
 
 
 class InstaFollow:
@@ -104,6 +104,7 @@ class InstaFollow:
     def _follow_users(self, users, rate, wait):
         fail_count = 0
         progress = 0
+        t0 = time()
         while users:
             progress += 1
             id, username = users.pop(0)
@@ -127,9 +128,14 @@ class InstaFollow:
 
             if not (progress % rate):
                 wait_time = randint(wait[0], wait[1])
+                elapsed = time() - t0
+
+                wait_time = wait_time - elapsed if wait_time > elapsed else 1
+
                 self.print_and_log("{} requests sent. Sleeping for {} mins".format(rate, wait_time / 60))
                 sleep(wait_time)
-            sleep(uniform(1.0, 4.0))  # wait 1-4 secs between requests
+                t0 = time()
+            sleep(uniform(28.0, 36.0))  # wait 1-4 secs between requests
 
 
 @click.command()
