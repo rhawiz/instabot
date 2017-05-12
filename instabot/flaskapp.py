@@ -87,8 +87,11 @@ def stop_bot():
         print pid, p
 
         if p:
-            os.kill(int(pid), signal.SIGTERM)
-            processes.pop(pid)
+            try:
+                os.kill(int(pid), signal.SIGTERM)
+                processes.pop(pid)
+            except OSError, e:
+                print e
     return redirect(url_for('active_bots'))
 
 
