@@ -9,8 +9,8 @@ pkill -f "ngrok"
 echo "Changing permissions to $user:$user..."
 sudo chown -R $user:$user ..
 echo "Running flaskapp..."
-nohup python flaskapp.py &
+python flaskapp.py &
 echo "Running ngrok..."
-nohup ngrok http -region=eu -log=stdout 5000 > /dev/null &
+nohup ngrok http -region=eu -log=stdout 5000 > ngrok.log &
 sleep 1
 python ngrokinstances.py
