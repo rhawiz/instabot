@@ -16,6 +16,7 @@ from moviepy.editor import VideoFileClip
 import struct
 import imghdr
 
+
 def get_image_size(fname):
     with open(fname, 'rb') as fhandle:
         head = fhandle.read(24)
@@ -29,7 +30,7 @@ def get_image_size(fname):
         elif imghdr.what(fname) == 'gif':
             width, height = struct.unpack('<HH', head[6:10])
         elif imghdr.what(fname) == 'jpeg':
-            fhandle.seek(0) # Read 0xff next
+            fhandle.seek(0)  # Read 0xff next
             size = 2
             ftype = 0
             while not 0xc0 <= ftype <= 0xcf:
@@ -45,6 +46,7 @@ def get_image_size(fname):
         else:
             raise RuntimeError("Unsupported format")
         return width, height
+
 
 class InstagramAPI:
     API_URL = 'https://i.instagram.com/api/v1/'
@@ -193,13 +195,14 @@ class InstagramAPI:
                                'Connection': 'keep-alive',
                                'User-Agent': self.USER_AGENT})
         response = self.s.post(self.API_URL + "upload/video/", data=m.to_string())
+        print response.text
         if response.status_code == 200:
             body = json.loads(response.text)
             upload_url = body['video_upload_urls'][3]['url']
             upload_job = body['video_upload_urls'][3]['job']
 
             videoData = open(video, 'rb').read()
-            request_size = math.floor(len(videoData) / 4)
+            request_size = int(math.floor(len(videoData) / 4))
             lastRequestExtra = (len(videoData) - (request_size * 3))
 
             headers = copy.deepcopy(self.s.headers)
@@ -227,9 +230,13 @@ class InstagramAPI:
 
                 self.s.headers.update({'Content-Length': str(end - start), 'Content-Range': content_range, })
                 response = self.s.post(upload_url, data=videoData[start:start + length])
-            self.s.headers = headers
+                print upload_url
+                print response.text
 
+            self.s.headers = headers
+            print response.status_code
             if response.status_code == 200:
+                print upload_id, video, thumbnail, caption
                 if self.configure_video(upload_id, video, thumbnail, caption):
                     self.expose()
         return False
@@ -606,12 +613,19 @@ class InstagramAPI:
         return self.send_request('feed/liked/?max_id=' + str(maxid))
 
     def generate_signature(self, data):
-        ig_sig_key_version = self.SIG_KEY_VERSION
-        signed_body = hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest()
-        end_part = urllib.quote(data)
-        signature = 'ig_sig_key_version={}&signed_body={}.{}'.format(ig_sig_key_version, signed_body, end_part)
+        # ig_sig_key_version = self.SIG_KEY_VERSION
+        # signed_body = hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest()
+        # end_part = urllib.quote(data)
+        # signature = 'ig_sig_key_version={}&signed_body={}.{}'.format(ig_sig_key_version, signed_body, end_part)
+        #
+        # return signature
+        try:
+            parsedData = urllib.parse.quote(data)
+        except AttributeError:
+            parsedData = urllib.quote(data)
 
-        return signature
+        return 'ig_sig_key_version=' + self.SIG_KEY_VERSION + '&signed_body=' + hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest() + '.' + parsedData
+
 
     def generate_device_id(self, seed):
         volatile_seed = "12345"
