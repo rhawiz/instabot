@@ -1,0 +1,28 @@
+<script>
+
+function load(){
+    var textarea = document.getElementById('textarea');
+    textarea.scrollTop = textarea.scrollHeight;
+}
+
+
+
+</script>
+
+<!DOCTYPE html>
+<html style="height:95%" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log</title>
+</head>
+<body onload="load()" style="height:100%">
+<div style="float:left;width:100%;height:100%;">
+    <textarea id='textarea' style="height:inherit;width:100%;" disabled>
+        {{log}}
+    </textarea>
+</div>
+<form action="/clear_logs" method="POST">
+    <button type="submit">Clear log</button>
+</form>
+</body>
+</html>

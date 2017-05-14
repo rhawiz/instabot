@@ -1,27 +1,31 @@
+import json
 from random import randint, uniform
 from time import sleep, time
 
 import click
+import logging
 
 from instagramapi import InstagramAPI
 import datetime
 
 
 class InstaUnfollow:
-    def __init__(self, username, password):
+    def __init__(self, username, password, action_interval=15.0, log_file=None):
         self.username = username
         self.password = password
-        self.log_file = "{}_instaunfollow.log".format(self.username)
+        self.action_interval = action_interval
+        self.log_file = "{}.log".format(self.username) if not log_file else log_file
 
     def _get_unfollow_list(self, unfollow_all):
+        logging.info('Collecting users to unfollow...')
 
         # Get people followings
         following_details = self.API.get_total_followings(username_id=self.API.username_id)
 
         followings = []
         for details in following_details:
-            pk = details.get(u"pk", None)
-            username = details.get(u"username", None)
+            pk = details.get('pk', None)
+            username = details.get('username', None)
             if pk:
                 followings.append((pk, username))
 
@@ -44,68 +48,65 @@ class InstaUnfollow:
 
         # Find difference to get a list of people who are not following back
         unfollow_list = list(followings - followers)
-        return unfollow_list
 
-    def print_and_log(self, text):
-        try:
-            print text
-            with open(self.log_file, "ab") as f:
-                f.write("{}\n".format(text))
-        except Exception, e:
-            print "instaunfollow:print_and_log ", e
+        return unfollow_list
 
     def start(self, rate, wait, unfollow_all):
         start_time = datetime.datetime.now()
-        self.print_and_log("Started at {}".format(start_time.strftime("%Y-%m-%d %H:%M")))
+        logging.info(
+            "Instaunfollow for user {} started on {}".format(self.username, start_time.strftime("%d-%m-%Y %H:%M:%S")))
 
         self.API = InstagramAPI(self.username, self.password)
 
         attempts = 0
-        while attempts <= 5:
+        while attempts <= 10:
+
+            self.API.login()
+
+            users = self._get_unfollow_list(unfollow_all)
+            logging.info(
+                "Instaunfollow starting on account {}...Unfollowing {} users...".format(self.username, len(users)))
+
+            wait_seconds = wait * 60
             try:
-                print attempts
-                self.API.login()
-
-                unfollow_list = self._get_unfollow_list(unfollow_all)
-                self.print_and_log("Starting...unfollowing {} followers.".format(len(unfollow_list)))
-
-                wait_seconds = wait * 60
-                self._unfollow_users(unfollow_list, rate, wait_seconds)
+                self._unfollow_users(users, rate, wait_seconds)
                 break
             except Exception, e:
-                self.print_and_log(e)
                 attempts += 1
-        end_time = datetime.datetime.now()
-        self.print_and_log("Ended at {}".format(end_time.strftime("%Y-%m-%d %H:%M")))
+                logging.error("Instaunfollow failed to unfollow users on attempt {}".format(e))
+                logging.debug(e)
 
-    def _unfollow_users(self, unfollow_list, unfollows, wait):
+        end_time = datetime.datetime.now()
+        logging.info(
+            "Instaunfollow ended on account {} at {}".format(self.username, end_time.strftime("%d-%m-%Y %H:%M:%S")))
+
+    def _unfollow_users(self, unfollow_list, rate, wait):
         fail_count = 0
         progress = 0
         t0 = time()
         while unfollow_list:
             progress += 1
             id, username = unfollow_list.pop(0)
-            self.print_and_log("{} unfollowing user {}({})".format(self.username, username, id))
+            # logging.debug("{} unfollowing user {} ({})".format(self.username, username, id))
             status = self.API.unfollow(id)
             if status:
                 fail_count = 0
             elif not status:
-                self.print_and_log(self.API.last_response.content)
                 fail_count += 1
 
-            self.print_and_log("\tresponse: {}".format(self.API.last_response.content))
+            logging.debug(json.dumps(self.API.last_response.content, indent=4))
             if fail_count == 3:
-                self.print_and_log("3 failed follow requests in a row. Sleeping for 10 mins")
-                sleep(1200)
+                logging.info("3 Failed requests in a row...Sleeping for 5 mins.")
+                sleep(600)
             elif fail_count > 10:
-                wait_time = randint(21600, 28800)
-                self.print_and_log("10 failed follow requests in a row. Sleeping for {} mins".format(wait_time / 60))
-                sleep(wait_time)
-            if not (progress % unfollows):
+                logging.info("10 failed follow requests in a row. Ending...")
+                break
+
+            if not (progress % rate):
                 wait_time = randint(wait[0], wait[1])
                 elapsed = time() - t0
-                wait_time = wait_time - elapsed if wait_time > elapsed else 1
-                self.print_and_log("{} requests sent. Sleeping for {} mins".format(unfollows, wait_time / 60))
+                wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
+                logging.info("{} sent {} requests. Sleeping for {} mins".format(self.username, rate, wait_time / 60))
                 sleep(wait_time)
                 t0 = time()
             sleep(uniform(11.0, 22.0))  # wait 1-4 secs between requests

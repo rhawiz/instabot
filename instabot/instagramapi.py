@@ -1,5 +1,6 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import logging
 import requests
 import random
 import json
@@ -78,7 +79,7 @@ class InstagramAPI:
         m.update(username.encode('utf-8') + password.encode('utf-8'))
         self.device_id = self.generate_device_id(m.hexdigest())
         self.set_user(username, password)
-        self.isLoggedIn = False
+        self.is_logged_in = False
         self.last_response = None
 
     def set_user(self, username, password):
@@ -87,26 +88,27 @@ class InstagramAPI:
         self.uuid = self.generate_uuid(True)
 
     def login(self, force=False):
-        if (not self.isLoggedIn or force):
+        if not self.is_logged_in or force:
             self.s = requests.Session()
             # if you need proxy make something like this:
             # self.s.proxies = {"https" : "http://proxyip:proxyport"}
             if (
-                    self.send_request('si/fetch_headers/?challenge_type=signup&guid=' + self.generate_uuid(False), None,
-                                      True)):
+            self.send_request('si/fetch_headers/?challenge_type=signup&guid=' + self.generate_uuid(False), None, True)):
 
-                data = {'phone_id': self.generate_uuid(True),
-                        '_csrftoken': self.last_response.cookies['csrftoken'],
-                        'username': self.username,
-                        'guid': self.uuid,
-                        'device_id': self.device_id,
-                        'password': self.password,
-                        'login_attempt_count': '0'}
+                data = {
+                    'phone_id': self.generate_uuid(True),
+                    '_csrftoken': self.last_response.cookies['csrftoken'],
+                    'username': self.username,
+                    'guid': self.uuid,
+                    'device_id': self.device_id,
+                    'password': self.password,
+                    'login_attempt_count': '0'
+                }
 
-                if (self.send_request('accounts/login/', self.generate_signature(json.dumps(data)), True)):
-                    self.isLoggedIn = True
+                if self.send_request('accounts/login/', self.generate_signature(json.dumps(data)), True):
+                    self.is_logged_in = True
                     self.username_id = self.last_json["logged_in_user"]["pk"]
-                    self.rank_token = "%s_%s" % (self.username_id, self.uuid)
+                    self.rank_token = "{}_{}".format(self.username_id, self.uuid)
                     self.token = self.last_response.cookies["csrftoken"]
 
                     self.sync_features()
@@ -114,8 +116,10 @@ class InstagramAPI:
                     self.timeline_feed()
                     self.getv2_inbox()
                     self.get_recent_activity()
-                    print ("Login success!\n")
-                    return True;
+
+                    logging.info("Successfully logged in as user {}".format(self.username))
+
+                    return True
 
     def sync_features(self):
         data = json.dumps({
@@ -482,70 +486,70 @@ class InstagramAPI:
         query = self.send_request('feed/timeline/?rank_token=' + str(self.rank_token) + '&ranked_content=true&')
         return query
 
-    def get_user_feed(self, username_id, maxid='', min_timestamp=None):
+    def get_user_feed(self, username_id, max_id='', min_timestamp=None):
         query = self.send_request(
-            'feed/user/' + str(username_id) + '/?max_id=' + str(maxid) + '&min_timestamp=' + str(min_timestamp)
+            'feed/user/' + str(username_id) + '/?max_id=' + str(max_id) + '&min_timestamp=' + str(min_timestamp)
             + '&rank_token=' + str(self.rank_token) + '&ranked_content=true')
         return query
 
-    def get_self_user_feed(self, maxid='', min_timestamp=None):
-        return self.get_user_feed(self.username_id, maxid, min_timestamp)
+    def get_self_user_feed(self, max_id='', min_timestamp=None):
+        return self.get_user_feed(self.username_id, max_id, min_timestamp)
 
-    def get_hashtag_feed(self, hashtag, maxid=''):
+    def get_hashtag_feed(self, hashtag, max_id=''):
         return self.send_request('feed/tag/' + hashtag + '/?max_id=' + str(
-            maxid) + '&rank_token=' + self.rank_token + '&ranked_content=true&')
+            max_id) + '&rank_token=' + self.rank_token + '&ranked_content=true&')
 
     def search_location(self, query):
         locationFeed = self.send_request('fbsearch/places/?rank_token=' + str(self.rank_token) + '&query=' + str(query))
         return locationFeed
 
-    def get_location_feed(self, location_id, maxid=''):
+    def get_location_feed(self, location_id, max_id=''):
         return self.send_request('feed/location/' + str(
-            location_id) + '/?max_id=' + maxid + '&rank_token=' + self.rank_token + '&ranked_content=true&')
+            location_id) + '/?max_id=' + max_id + '&rank_token=' + self.rank_token + '&ranked_content=true&')
 
     def get_popular_feed(self):
         popularFeed = self.send_request(
             'feed/popular/?people_teaser_supported=1&rank_token=' + str(self.rank_token) + '&ranked_content=true&')
         return popularFeed
 
-    def get_user_followings(self, username_id, maxid=''):
-        return self.send_request('friendships/' + str(username_id) + '/following/?max_id=' + str(maxid)
+    def get_user_followings(self, username_id, max_id=''):
+        return self.send_request('friendships/' + str(username_id) + '/following/?max_id=' + str(max_id)
                                  + '&ig_sig_key_version=' + self.SIG_KEY_VERSION + '&rank_token=' + self.rank_token)
 
     def get_self_users_following(self):
         return self.get_user_followings(self.username_id)
 
-    def get_user_followers(self, username_id, maxid=''):
-        if maxid == '':
+    def get_user_followers(self, username_id, max_id=''):
+        if max_id == '':
             return self.send_request('friendships/' + str(username_id) + '/followers/?rank_token=' + self.rank_token)
         else:
             return self.send_request(
                 'friendships/' + str(username_id) + '/followers/?rank_token=' + self.rank_token + '&max_id=' + str(
-                    maxid))
+                    max_id))
 
     def get_self_user_followers(self):
         return self.get_user_followers(self.username_id)
 
-    def like(self, mediaId):
+    def like(self, media_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
             '_csrftoken': self.token,
-            'media_id': mediaId
+            'media_id': media_id
         })
-        return self.send_request('media/' + str(mediaId) + '/like/', self.generate_signature(data))
+        return self.send_request('media/' + str(media_id) + '/like/', self.generate_signature(data))
 
-    def unlike(self, mediaId):
+    def unlike(self, media_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
             '_csrftoken': self.token,
-            'media_id': mediaId
+            'media_id': media_id
         })
-        return self.send_request('media/' + str(mediaId) + '/unlike/', self.generate_signature(data))
+        return self.send_request('media/' + str(media_id) + '/unlike/', self.generate_signature(data))
 
-    def get_media_comments(self, mediaId):
-        return self.send_request('media/' + mediaId + '/comments/?')
+    def get_media_comments(self, media_id):
+        return self.send_request('media/' + media_id + '/comments/?')
 
     def set_name_and_phone(self, name='', phone=''):
         data = json.dumps({
@@ -564,68 +568,65 @@ class InstagramAPI:
         # TODO Instagram.php 1470-1485
         return False
 
-    def follow(self, userId):
+    def follow(self, user_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self.token
         })
-        return self.send_request('friendships/create/' + str(userId) + '/', self.generate_signature(data))
+        return self.send_request('friendships/create/' + str(user_id) + '/', self.generate_signature(data))
 
-    def unfollow(self, userId):
+    def unfollow(self, user_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self.token
         })
-        return self.send_request('friendships/destroy/' + str(userId) + '/', self.generate_signature(data))
+        return self.send_request('friendships/destroy/' + str(user_id) + '/', self.generate_signature(data))
 
-    def block(self, userId):
+    def block(self, user_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self.token
         })
-        return self.send_request('friendships/block/' + str(userId) + '/', self.generate_signature(data))
+        return self.send_request('friendships/block/' + str(user_id) + '/', self.generate_signature(data))
 
-    def unblock(self, userId):
+    def unblock(self, user_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self.token
         })
-        return self.send_request('friendships/unblock/' + str(userId) + '/', self.generate_signature(data))
+        return self.send_request('friendships/unblock/' + str(user_id) + '/', self.generate_signature(data))
 
-    def user_friendship(self, userId):
+    def user_friendship(self, user_id):
         data = json.dumps({
             '_uuid': self.uuid,
             '_uid': self.username_id,
-            'user_id': userId,
+            'user_id': user_id,
             '_csrftoken': self.token
         })
-        return self.send_request('friendships/show/' + str(userId) + '/', self.generate_signature(data))
+        return self.send_request('friendships/show/' + str(user_id) + '/', self.generate_signature(data))
 
-    def get_liked_media(self, maxid=''):
-        return self.send_request('feed/liked/?max_id=' + str(maxid))
+    def get_liked_media(self, user_id=''):
+        return self.send_request('feed/liked/?max_id=' + str(user_id))
 
     def generate_signature(self, data):
-        # ig_sig_key_version = self.SIG_KEY_VERSION
-        # signed_body = hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest()
-        # end_part = urllib.quote(data)
-        # signature = 'ig_sig_key_version={}&signed_body={}.{}'.format(ig_sig_key_version, signed_body, end_part)
-        #
-        # return signature
-        try:
-            parsedData = urllib.parse.quote(data)
-        except AttributeError:
-            parsedData = urllib.quote(data)
 
-        return 'ig_sig_key_version=' + self.SIG_KEY_VERSION + '&signed_body=' + hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest() + '.' + parsedData
+        parsed_data = urllib.quote(data)
+        signed_body = hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest()
+        signature = 'ig_sig_key_version={}&signed_body={}.{}'.format(
+            self.SIG_KEY_VERSION,
+            signed_body,
+            parsed_data
+        )
 
+        return signature
 
     def generate_device_id(self, seed):
         volatile_seed = "12345"
@@ -652,7 +653,7 @@ class InstagramAPI:
         return False
 
     def send_request(self, endpoint, post=None, login=False):
-        if (not self.isLoggedIn and not login):
+        if (not self.is_logged_in and not login):
             raise Exception("Not logged in!\n")
             return;
 

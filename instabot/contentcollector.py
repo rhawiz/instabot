@@ -5,7 +5,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 
-from instabot.netutils import generate_request_header
+from instabot.utils import generate_request_header
 
 
 class ContentCollector:

@@ -14,7 +14,7 @@ from flask import Flask, request, redirect, url_for, flash
 from flask import render_template
 from werkzeug.utils import secure_filename
 
-from dbutils import execute_query
+from utils import execute_query
 from instabot import post_contents, collect_followers
 
 UPLOAD_FOLDER = 'content'
@@ -39,6 +39,7 @@ RETRIEVE_ALL_BOTS_QUERY = "SELECT pid, user, bot, active, created_at from bots"
 RETRIEVE_ACTIVE_BOTS_QUERY = "SELECT pid, user, bot, created_at from bots WHERE active = 1"
 DEACTIVATE_BOT_QUERY = "DELETE from bots WHERE pid = {pid}"
 
+LOG_FILE = "instabot.log"
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -59,9 +60,21 @@ def view_contents():
     return render_template('contents.html', content=contents)
 
 
-@app.route('/log', methods=['GET'])
-def log():
-    return "Log"
+@app.route('/logs', methods=['GET'])
+def logs():
+    if not os.path.isfile("instabot.log"):
+        return render_template('log.html', content="No logs")
+    with open(LOG_FILE, "rb") as f:
+        log = f.read()
+
+    return render_template('log.html', log=log)
+
+
+@app.route('/clear_logs', methods=['POST'])
+def clear_logs():
+    open(LOG_FILE, 'w').close()
+
+    return redirect(url_for('logs'))
 
 
 @app.route('/bots', methods=['GET'])
@@ -197,5 +210,9 @@ def upload_file():
             return redirect(url_for('view_contents'))
 
 
-if __name__ == '__main__':
+def main():
     app.run(host="0.0.0.0", port="5000")
+
+
+if __name__ == '__main__':
+    main()
