@@ -41,6 +41,7 @@ DEACTIVATE_BOT_QUERY = "DELETE from bots WHERE pid = {pid}"
 
 LOG_FILE = "instabot.log"
 
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -63,9 +64,10 @@ def view_contents():
 @app.route('/logs', methods=['GET'])
 def logs():
     if not os.path.isfile("instabot.log"):
-        return render_template('log.html', content="No logs")
+        return render_template('log.html', content="")
+
     with open(LOG_FILE, "rb") as f:
-        log = f.read()
+        log = f.read()[-300000:]
 
     return render_template('log.html', log=log)
 
