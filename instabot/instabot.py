@@ -16,14 +16,24 @@ DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_
 LOG_FILE = "instabot.log"
 
 
-def collect_followers(username, password, similar_users, follow_rate=75, unfollow_rate=75, wait=75):
+def collect_followers(
+        username,
+        password,
+        similar_users,
+        follow_rate=75,
+        unfollow_rate=75,
+        wait=75,
+        follow_action_wait=30,
+        unfollow_action_wait=16,
+        follow_first=False
+):
     logging.basicConfig(
         filename=LOG_FILE,
         format='[%(asctime)s][%(levelname)s][{}] %(message)s'.format(username),
         datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
     )
-    follow_bot = InstaFollow(username, password, similar_users)
-    unfollow_bot = InstaUnfollow(username, password)
+    follow_bot = InstaFollow(username, password, similar_users, action_interval=follow_action_wait)
+    unfollow_bot = InstaUnfollow(username, password, action_interval=unfollow_action_wait)
     wait_min = wait * 0.9
     wait_max = wait * 1.1
 
@@ -39,10 +49,10 @@ def collect_followers(username, password, similar_users, follow_rate=75, unfollo
         try:
             follow_bot.start(rate=follow_rate, wait=(wait_min * 60, wait_max * 60))
             fail_count = 0
-
         except Exception, e:
             fail_count += 1
             logging.critical(e)
+
         if fail_count >= 10:
             logging.info("Failed 10 times, sleeping for 10 mins.")
             sleep(2400)

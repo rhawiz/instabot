@@ -120,28 +120,34 @@ def follow_bot():
         follow_rate = int(request.form.get('frate'))
         unfollow_rate = int(request.form.get('urate'))
         wait = int(request.form.get('wait'))
+        follow_action_wait = int(request.form.get('faction_wait'))
+        unfollow_action_wait = int(request.form.get('uaction_wait'))
+        follow_first = request.form.get('follow_first')
 
-        similar_users = similar_users_unparsed.split(",")
-        for idx, user in enumerate(similar_users):
-            similar_users[idx] = user.strip()
+        if username and password:
 
-        p = multiprocessing.Process(target=collect_followers,
-                                    args=(
-                                        username, password, similar_users, follow_rate, unfollow_rate, wait))
+            similar_users = similar_users_unparsed.split(",")
+            for idx, user in enumerate(similar_users):
+                similar_users[idx] = user.strip()
 
-        p.start()
-        if p.is_alive():
-            data = {
-                'process': p,
-                'bot': 'follow',
-                'username': username,
-                'rate': "{}/{}".format(follow_rate, unfollow_rate),
-                'wait': str(wait),
-                'created_at': time.strftime("%Y-%m-%d at %H:%M"),
-            }
+            p = multiprocessing.Process(target=collect_followers,
+                                        args=(
+                                            username, password, similar_users, follow_rate, unfollow_rate, wait,
+                                            follow_action_wait, unfollow_action_wait))
 
-            processes[str(p.pid)] = data
-        return redirect(url_for('active_bots'))
+            p.start()
+            if p.is_alive():
+                data = {
+                    'process': p,
+                    'bot': 'follow',
+                    'username': username,
+                    'rate': "{}/{}".format(follow_rate, unfollow_rate),
+                    'wait': str(wait),
+                    'created_at': time.strftime("%Y-%m-%d at %H:%M"),
+                }
+
+                processes[str(p.pid)] = data
+    return redirect(url_for('active_bots'))
 
 
 @app.route('/post_bot', methods=['POST'])
@@ -151,23 +157,23 @@ def post_bot():
         username = request.form.get('username')
         password = request.form.get('password')
         post_rate_secs = float(post_rate) * 60.0
-        print post_rate_secs
-        p = multiprocessing.Process(target=post_contents, args=(username, password, post_rate_secs))
-        p.start()
+        if username and password:
+            p = multiprocessing.Process(target=post_contents, args=(username, password, post_rate_secs))
+            p.start()
 
-        if p.is_alive():
-            data = {
-                'process': p,
-                'bot': 'post',
-                'username': username,
-                'rate': "1",
-                'wait': post_rate,
-                'created_at': time.strftime("%Y-%m-%d at %H:%M"),
+            if p.is_alive():
+                data = {
+                    'process': p,
+                    'bot': 'post',
+                    'username': username,
+                    'rate': "1",
+                    'wait': post_rate,
+                    'created_at': time.strftime("%Y-%m-%d at %H:%M"),
 
-            }
+                }
 
-            processes[str(p.pid)] = data
-        return redirect(url_for('active_bots'))
+                processes[str(p.pid)] = data
+    return redirect(url_for('active_bots'))
 
 
 @app.route('/delete', methods=['POST'])

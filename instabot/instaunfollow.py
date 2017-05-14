@@ -109,8 +109,10 @@ class InstaUnfollow:
                 logging.info("{} sent {} requests. Sleeping for {} mins".format(self.username, rate, wait_time / 60))
                 sleep(wait_time)
                 t0 = time()
-            sleep(uniform(11.0, 22.0))  # wait 1-4 secs between requests
-
+            # wait between action interval +- 10%
+            min_wait = self.action_interval * 0.9
+            max_wait = self.action_interval * 1.1
+            sleep(uniform(min_wait, max_wait))
 
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram username')
