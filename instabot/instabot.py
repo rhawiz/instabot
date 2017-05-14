@@ -26,15 +26,27 @@ def collect_followers(username, password, similar_users, follow_rate=75, unfollo
     unfollow_bot = InstaUnfollow(username, password)
     wait_min = wait * 0.9
     wait_max = wait * 1.1
+
+    fail_count = 0
+
     while True:
         try:
             unfollow_bot.start(rate=unfollow_rate, wait=(wait_min * 60, wait_max * 60), unfollow_all=True)
+            fail_count = 0
         except Exception, e:
+            fail_count += 1
             logging.critical(e)
         try:
             follow_bot.start(rate=follow_rate, wait=(wait_min * 60, wait_max * 60))
+            fail_count = 0
+
         except Exception, e:
+            fail_count += 1
             logging.critical(e)
+        if fail_count >= 10:
+            logging.info("Failed 10 times, sleeping for 10 mins.")
+            sleep(2400)
+            fail_count = 0
 
 
 def post_contents(username, password, wait=86400):
@@ -43,7 +55,6 @@ def post_contents(username, password, wait=86400):
         format='[%(asctime)s][%(levelname)s][{}] %(message)s'.format(username),
         datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
     )
-
     while True:
         content = None
         try:
@@ -64,7 +75,6 @@ def post_contents(username, password, wait=86400):
             except Exception, e:
                 logging.critical(e)
 
-        # Sleep for 24 hours before posting new content
         sleep(wait)
 
 
