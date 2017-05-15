@@ -9,18 +9,23 @@ import multiprocessing
 
 import signal
 
-import re
 from flask import Flask, request, redirect, url_for, flash
 from flask import render_template
+from flask import send_file
+from flask import send_from_directory
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
 from utils import execute_query
 from instabot import post_contents, collect_followers
 
-UPLOAD_FOLDER = 'content'
+UPLOAD_FOLDER = '../static/content'
+UPLOAD_URL = '/content'
+STATIC_URL = '/static'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 my_loader = jinja2.ChoiceLoader([
@@ -30,16 +35,21 @@ my_loader = jinja2.ChoiceLoader([
 app.jinja_loader = my_loader
 
 DB_PATH = "content.db"
-INSERT_CONTENT_QUERY = "INSERT INTO insta_content ('user', 'caption', 'path')  VALUES ('{user}', '{caption}', '{path}');"
-RETRIEVE_CONTENT_QUERY = "SELECT rowid, user, caption, path, created_at from insta_content"
+INSERT_CONTENT_QUERY = "INSERT INTO insta_content ('user', 'caption', 'path', 'url')  VALUES ('{user}', '{caption}', '{path}', '{url}');"
+RETRIEVE_CONTENT_QUERY = "SELECT rowid, user, caption, url, created_at, verified from insta_content"
 DELETE_CONTENT_QUERY = "DELETE from insta_content WHERE ROWID = {id}"
-
-INSERT_BOT_QUERY = "INSERT INTO bots ('pid', 'user', 'bot')  VALUES ('{pid}', '{user}', '{bot}');"
-RETRIEVE_ALL_BOTS_QUERY = "SELECT pid, user, bot, active, created_at from bots"
-RETRIEVE_ACTIVE_BOTS_QUERY = "SELECT pid, user, bot, created_at from bots WHERE active = 1"
-DEACTIVATE_BOT_QUERY = "DELETE from bots WHERE pid = {pid}"
+VERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 1 WHERE ROWID={id};"
+UNVERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 0 WHERE ROWID={id};"
 
 LOG_FILE = "instabot.log"
+
+processes = {}
+
+
+@app.route('{}/<path:filename>'.format(UPLOAD_URL))
+def serve_content(filename):
+    root_dir = os.path.dirname(os.getcwd())
+    return send_from_directory(os.path.join(root_dir, 'static', 'content'), filename)
 
 
 def allowed_file(filename):
@@ -50,9 +60,6 @@ def allowed_file(filename):
 @app.route('/', methods=['GET'])
 def home():
     return render_template('index.html')
-
-
-processes = {}
 
 
 @app.route('/content', methods=['GET'])
@@ -75,8 +82,21 @@ def logs():
 @app.route('/clear_logs', methods=['POST'])
 def clear_logs():
     open(LOG_FILE, 'w').close()
-
     return redirect(url_for('logs'))
+
+
+@app.route('/verify', methods=['POST'])
+def verify_photo():
+    if request.method == 'POST':
+        id = request.form.get('id')
+        verified = int(request.form.get('verified'))
+
+        if verified:
+            execute_query(DB_PATH, UNVERIFY_CONTENT_QUERY.format(id=id))
+        elif not verified:
+            execute_query(DB_PATH, VERIFY_CONTENT_QUERY.format(id=id))
+
+    return redirect(url_for('view_contents'))
 
 
 @app.route('/bots', methods=['GET'])
@@ -209,10 +229,10 @@ def upload_file():
             fn = "{}.{}".format(str(uuid.uuid4()), ext)
 
             path = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-
+            file_url = "{}/{}".format(UPLOAD_URL, fn)
             file.save(path)
 
-            execute_query(DB_PATH, INSERT_CONTENT_QUERY.format(user=user, caption=caption, path=path))
+            execute_query(DB_PATH, INSERT_CONTENT_QUERY.format(user=user, caption=caption, path=path, url=file_url))
 
             # return render_template('contents.html', url=path, user=user, caption=caption)
             return redirect(url_for('view_contents'))

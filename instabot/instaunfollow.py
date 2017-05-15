@@ -105,7 +105,7 @@ class InstaUnfollow:
             if not (progress % rate):
                 wait_time = randint(wait[0], wait[1])
                 elapsed = time() - t0
-                wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
+                # wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
                 logging.info("{} sent {} requests. Sleeping for {} mins".format(self.username, rate, wait_time / 60))
                 sleep(wait_time)
                 t0 = time()
@@ -113,6 +113,7 @@ class InstaUnfollow:
             min_wait = self.action_interval * 0.9
             max_wait = self.action_interval * 1.1
             sleep(uniform(min_wait, max_wait))
+
 
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram username')

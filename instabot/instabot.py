@@ -11,7 +11,7 @@ from instafollow import InstaFollow
 from instaunfollow import InstaUnfollow
 
 DB_PATH = "content.db"
-SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" ORDER BY created_at DESC LIMIT 1"
+SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" AND verified=1 ORDER BY created_at DESC LIMIT 1"
 DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY created_at DESC LIMIT 1)"
 LOG_FILE = "instabot.log"
 

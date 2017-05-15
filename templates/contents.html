@@ -6,7 +6,7 @@
 
 <form action="/upload" method="post" enctype="multipart/form-data">
     Image from file <input type="file" name="file">
-    <br> <a>     or from url <input disabled type="text" name="url" placeholder="not implemented yet"> </a>
+    <br> <a> or from url <input disabled type="text" name="url" placeholder="not implemented yet"> </a>
     <br>
     <br>
     User: <input type="text" name="user">
@@ -26,14 +26,20 @@
             <b>caption</b>
         </td>
         <td>
-            <b>path</b>
+            <b>img</b>
         </td>
         <td>
             <b>date</b>
         </td>
+        <td>
+            <b>verified</b>
+        </td>
+        <td>
+            <b>delete</b>
+        </td>
     </tr>
 
-    {% for id, user, caption, path, date in content %}
+    {% for id, user, caption, url, date, verified in content %}
     <tr>
         <td>
             {{user}}
@@ -42,10 +48,25 @@
             {{caption}}
         </td>
         <td>
-            {{path}}
+            <a href="{{url}}">
+                <img alt="{{url}}" src="{{url}}" width="60"/>
+            </a>
         </td>
         <td>
             {{date}}
+        </td>
+        <td>
+            <form action="/verify" method="post">
+                <button type="submit" value={{id}}>
+                    {% if verified == 1 %}
+                        yes
+                    {% else %}
+                        no
+                    {% endif %}
+                </button>
+                <input type="hidden" value={{id}} name="id"/>
+                <input type="hidden" value={{verified}} name="verified"/>
+            </form>
         </td>
 
         <td>

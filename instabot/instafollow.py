@@ -123,7 +123,7 @@ class InstaFollow:
             elif not status:
                 fail_count += 1
 
-            logging.debug(json.dumps(self.API.last_response.content, indent=4))
+            logging.debug(json.dumps(self.API.last_response.content))
             if fail_count == 3:
                 logging.info("3 Failed requests in a row...Sleeping for 5 mins.")
                 sleep(600)
@@ -135,7 +135,8 @@ class InstaFollow:
                 wait_time = randint(wait[0], wait[1])
                 elapsed = time() - t0
 
-                wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
+
+                #wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
 
                 logging.info("{} sent {} requests. Sleeping for {} mins".format(self.username, rate, wait_time / 60))
                 sleep(wait_time)

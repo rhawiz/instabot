@@ -2,5 +2,7 @@ click==6.6
 moviepy==0.2.2.11
 requests==2.11.1
 requests-toolbelt==0.7.0
+Flask-SQLAlchemy==2.2
+Jinja2==2.8
+Flask==0.12
 beautifulsoup4==4.4.1
-google-api-python-client
