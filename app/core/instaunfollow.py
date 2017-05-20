@@ -6,17 +6,19 @@ import click
 import logging
 
 from instagramapi import InstagramAPI
-import datetime
 
 
 class InstaUnfollow:
-    def __init__(self, username, password, action_interval=15.0, log_file=None):
+    def __init__(self, username, password, action_interval, rate, wait, unfollow_all):
         self.username = username
         self.password = password
         self.action_interval = action_interval
-        self.log_file = "{}.log".format(self.username) if not log_file else log_file
+        self.rate = rate
+        self.wait = wait
+        self.unfollow_all = unfollow_all
+        self.API = InstagramAPI(self.username, self.password)
 
-    def _get_unfollow_list(self, unfollow_all):
+    def _get_followers(self, unfollow_all):
         logging.info('Collecting users to unfollow...')
 
         # Get people followings
@@ -39,8 +41,8 @@ class InstaUnfollow:
 
         followers = []
         for details in followers_details:
-            pk = details.get(u"pk", None)
-            username = details.get(u"username", None)
+            pk = details.get("pk", None)
+            username = details.get("username", None)
             if pk:
                 followers.append((pk, username))
 
@@ -51,64 +53,54 @@ class InstaUnfollow:
 
         return unfollow_list
 
-    def start(self, rate, wait, unfollow_all):
-        start_time = datetime.datetime.now()
-        logging.info(
-            "Instaunfollow for user {} started on {}".format(self.username, start_time.strftime("%d-%m-%Y %H:%M:%S")))
-
-        self.API = InstagramAPI(self.username, self.password)
+    def start(self):
 
         attempts = 0
         while attempts <= 10:
 
             self.API.login()
 
-            users = self._get_unfollow_list(unfollow_all)
-            logging.info(
-                "Instaunfollow starting on account {}...Unfollowing {} users...".format(self.username, len(users)))
+            users = self._get_followers(self.unfollow_all)
 
-            wait_seconds = wait * 60
+            wait_seconds = self.wait * 60
             try:
-                self._unfollow_users(users, rate, wait_seconds)
+                logging.info("Unfollowing {} users...".format(len(users)))
+                self._unfollow_users(users, self.rate, wait_seconds)
                 break
             except Exception, e:
                 attempts += 1
-                logging.error("Instaunfollow failed to unfollow users on attempt {}".format(e))
+                logging.error("Unfollow failed on attempt {}...".format(e))
                 logging.debug(e)
 
-        end_time = datetime.datetime.now()
-        logging.info(
-            "Instaunfollow ended on account {} at {}".format(self.username, end_time.strftime("%d-%m-%Y %H:%M:%S")))
+        logging.info("Instaunfollow ended...")
 
     def _unfollow_users(self, unfollow_list, rate, wait):
         fail_count = 0
         progress = 0
-        t0 = time()
+
         while unfollow_list:
             progress += 1
             id, username = unfollow_list.pop(0)
-            # logging.debug("{} unfollowing user {} ({})".format(self.username, username, id))
+
             status = self.API.unfollow(id)
             if status:
                 fail_count = 0
             elif not status:
                 fail_count += 1
 
-            logging.debug(json.dumps(self.API.last_response.content, indent=4))
+            logging.debug(json.dumps(self.API.last_response.content))
             if fail_count == 3:
-                logging.info("3 Failed requests in a row...Sleeping for 5 mins.")
+                logging.info("3 Failed requests in a row...sleeping for 5 mins...")
                 sleep(600)
             elif fail_count > 10:
-                logging.info("10 failed follow requests in a row. Ending...")
+                logging.info("10 failed follow requests in a row...ending...")
                 break
 
             if not (progress % rate):
                 wait_time = randint(wait[0], wait[1])
-                elapsed = time() - t0
-                # wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
-                logging.info("{} sent {} requests. Sleeping for {} mins".format(self.username, rate, wait_time / 60))
+                logging.info("{} requests sent...sleeping for {} mins".format(rate, wait_time / 60))
                 sleep(wait_time)
-                t0 = time()
+
             # wait between action interval +- 10%
             min_wait = self.action_interval * 0.9
             max_wait = self.action_interval * 1.1

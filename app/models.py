@@ -1,16 +1,9 @@
 from datetime import datetime
 
 import enum
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-import os
-
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
-app = Flask(__name__)
-DIR = os.path.dirname(os.path.realpath(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///{}/test.db'.format(DIR)
-db = SQLAlchemy(app)
+from app import app, db
 
 
 class InstaAccount(db.Model):
@@ -52,6 +45,9 @@ class Content(db.Model):
         self.verified = verified
         self.created_at = created_at
 
+    def get_user(self):
+        return InstaAccount.query.filter_by(id=self.insta_account_id).first()
+
     def __repr__(self):
         return '<User %r> <URL %r>' % (self.insta_account_id, self.url)
 
@@ -86,13 +82,11 @@ class Bot(db.Model):
 
         self.created_at = created_at
 
+    def get_user(self):
+        return InstaAccount.query.filter_by(id=self.insta_account_id).first()
+
     def __repr__(self):
         return '<User %r Bot %r>' % (self.insta_user_id, self.bot)
-
-
-@app.route('/', methods=['GET'])
-def home():
-    return "Home"
 
 
 def main():

@@ -40,8 +40,8 @@ class ContentCollector:
             content = container.find(name="img")
             tags_container = container.findAll(name="a", attrs={"class": "post_tag"})
 
-            if hasattr(content, "instabot"):
-                url = content["instabot"]
+            if hasattr(content, "app"):
+                url = content["core"]
                 tags = []
 
                 for tag in tags_container:

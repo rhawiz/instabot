@@ -6,3 +6,4 @@ Flask-SQLAlchemy==2.2
 Jinja2==2.8
 Flask==0.12
 beautifulsoup4==4.4.1
+sqlalchemy-migrate

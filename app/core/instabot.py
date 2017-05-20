@@ -1,19 +1,18 @@
+import logging
 import threading
 from time import sleep
 
 import click
-import logging
+from app.core.instagramapi import InstagramAPI
+from app.core.instaunfollow import InstaUnfollow
 
-from utils import execute_query
-from instagramapi import InstagramAPI
-from instafollow import InstaFollow
-
-from instaunfollow import InstaUnfollow
+from app.core.instafollow import InstaFollow
+from app.core.utils import execute_query
 
 DB_PATH = "content.db"
 SELECT_SQL = "SELECT caption, path FROM insta_content WHERE user = \"{user}\" AND verified=1 ORDER BY created_at DESC LIMIT 1"
 DELETE_SQL = "DELETE FROM insta_content where rowid in (SELECT rowid FROM insta_content WHERE user = \"{user}\" ORDER BY created_at DESC LIMIT 1)"
-LOG_FILE = "instabot.log"
+LOG_FILE = "app.log"
 
 
 def collect_followers(
@@ -32,16 +31,25 @@ def collect_followers(
         format='[%(asctime)s][%(levelname)s][{}] %(message)s'.format(username),
         datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
     )
-    follow_bot = InstaFollow(username, password, similar_users, action_interval=follow_action_wait)
-    unfollow_bot = InstaUnfollow(username, password, action_interval=unfollow_action_wait)
+
     wait_min = wait * 0.9
     wait_max = wait * 1.1
+
+    follow_bot = InstaFollow(username, password, similar_users, action_interval=follow_action_wait)
+    unfollow_bot = InstaUnfollow(
+        username=username,
+        password=password,
+        action_interval=unfollow_action_wait,
+        rate=unfollow_rate,
+        wait=(wait_min * 60, wait_max * 60),
+        unfollow_all=True
+    )
 
     fail_count = 0
 
     while True:
         try:
-            unfollow_bot.start(rate=unfollow_rate, wait=(wait_min * 60, wait_max * 60), unfollow_all=True)
+            unfollow_bot.start()
             fail_count = 0
         except Exception, e:
             fail_count += 1

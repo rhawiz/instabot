@@ -3,7 +3,7 @@
 user="$USER"
 
 echo "Attempting to kill existing processes..."
-pkill -f "python flaskapp.py"
+pkill -f "python views.py"
 pkill -f "ngrok"
 
 echo "Changing permissions to $user:$user..."

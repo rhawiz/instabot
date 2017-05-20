@@ -1,38 +1,23 @@
-import os
-import uuid
-from random import randint
-import time
-
-import datetime
-import jinja2
 import multiprocessing
-
+import os
 import signal
+import time
+import uuid
 
 from flask import Flask, request, redirect, url_for, flash
 from flask import render_template
-from flask import send_file
 from flask import send_from_directory
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 
-from utils import execute_query
-from instabot import post_contents, collect_followers
+from app.core.utils import execute_query
+from core.instabot import post_contents, collect_followers
+from app import app, db
+from .models import Content, InstaAccount, Bot
 
-UPLOAD_FOLDER = '../static/content'
+UPLOAD_FOLDER = 'static/content'
 UPLOAD_URL = '/content'
 STATIC_URL = '/static'
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
-
-app = Flask(__name__)
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-my_loader = jinja2.ChoiceLoader([
-    app.jinja_loader,
-    jinja2.FileSystemLoader(['../templates']),
-])
-app.jinja_loader = my_loader
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'mp4'])
 
 DB_PATH = "content.db"
 INSERT_CONTENT_QUERY = "INSERT INTO insta_content ('user', 'caption', 'path', 'url')  VALUES ('{user}', '{caption}', '{path}', '{url}');"
@@ -41,7 +26,7 @@ DELETE_CONTENT_QUERY = "DELETE from insta_content WHERE ROWID = {id}"
 VERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 1 WHERE ROWID={id};"
 UNVERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 0 WHERE ROWID={id};"
 
-LOG_FILE = "instabot.log"
+LOG_FILE = "app.log"
 
 processes = {}
 
@@ -64,13 +49,15 @@ def home():
 
 @app.route('/content', methods=['GET'])
 def view_contents():
-    contents = execute_query(DB_PATH, RETRIEVE_CONTENT_QUERY)
-    return render_template('contents.html', content=contents)
+    # contents = execute_query(DB_PATH, RETRIEVE_CONTENT_QUERY)
+    contents = Content.query.all()
+    data = [(c.id, c.get_user().username, c.caption, c.url, c.created_at, c.verified) for c in contents]
+    return render_template('contents.html', content=data)
 
 
 @app.route('/logs', methods=['GET'])
 def logs():
-    if not os.path.isfile("instabot.log"):
+    if not os.path.isfile("app.log"):
         return render_template('log.html', content="")
 
     with open(LOG_FILE, "rb") as f:
@@ -89,29 +76,21 @@ def clear_logs():
 def verify_photo():
     if request.method == 'POST':
         id = request.form.get('id')
-        verified = int(request.form.get('verified'))
+        # verified = request.form.get('verified')
+        content = Content.query.filter_by(id=id).first()
 
-        if verified:
-            execute_query(DB_PATH, UNVERIFY_CONTENT_QUERY.format(id=id))
-        elif not verified:
-            execute_query(DB_PATH, VERIFY_CONTENT_QUERY.format(id=id))
+        content.verified = not content.verified
+
+        db.session.commit()
 
     return redirect(url_for('view_contents'))
 
 
 @app.route('/bots', methods=['GET'])
 def active_bots():
-    content = [
-        (
-            str(p.get("process").pid),
-            p.get('bot'),
-            p.get('username'),
-            p.get('rate'),
-            p.get('wait'),
-            p.get('created_at'),
-        ) for p in processes.itervalues()
-        ]
-    return render_template('bots.html', content=content)
+    bots = Bot.query.all()
+    data = [(b.unix_pid, b.bot, b.get_user().username, b.rate, b.interval, b.created_at) for b in bots]
+    return render_template('bots.html', content=data)
 
 
 @app.route('/stop', methods=['POST'])
@@ -119,7 +98,6 @@ def stop_bot():
     if request.method == 'POST':
         pid = request.form.get('pid')
         p = processes.get(pid)
-        print pid, p
 
         if p:
             try:

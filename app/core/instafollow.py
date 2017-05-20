@@ -1,27 +1,24 @@
+import datetime
 import json
+import logging
 import os
 from random import randint, uniform
-import datetime
-
-from time import sleep, time, strftime
+from time import sleep, time
 
 import click
-
 from requests.exceptions import ChunkedEncodingError
 
+from app.core.utils import csv_to_list, append_to_file, pop_text_file
 from instagramapi import InstagramAPI
-from utils import csv_to_list, append_to_file, pop_text_file
-import logging
 
 
 class InstaFollow:
-    def __init__(self, username, password, similar_users, action_interval=30.0, log_file=None):
+    def __init__(self, username, password, similar_users, action_interval=30.0):
         self.username = username
         self.password = password
         self.similar_users = similar_users
         self.action_interval = action_interval
         self.users_file_path = "{}_users.txt".format(self.username)
-        self.log_file = "{}.log".format(self.username) if not log_file else log_file
 
     def _get_user_ids(self, save_to):
         logging.info('Collecting users to follow...')
