@@ -13,14 +13,16 @@ from instagramapi import InstagramAPI
 
 
 class InstaFollow:
-    def __init__(self, username, password, similar_users, action_interval=30.0):
+    def __init__(self, username, password, similar_users, action_interval=30.0, rate=10, interval=8.0):
         self.username = username
         self.password = password
         self.similar_users = similar_users
         self.action_interval = action_interval
+        self.rate = rate
+        self.interval = interval
         self.users_file_path = "{}_users.txt".format(self.username)
 
-    def _get_user_ids(self, save_to):
+    def _get_user_ids(self, save_to=None):
         logging.info('Collecting users to follow...')
 
         # Randomly select root account to search for users
@@ -42,7 +44,7 @@ class InstaFollow:
                 media_ids.append(media.get('id'))
             max_id = self.API.last_json.get('next_max_id')
 
-        user_accounts = []
+        user_ids = []
 
         for media_id in media_ids:
             self.API.get_media_likers(media_id)
@@ -56,16 +58,40 @@ class InstaFollow:
 
             for user in users:
                 id = user.get('pk')
-                username = user.get('username')
-                user_accounts.append((id, username))
+                user_ids.append(id)
 
-        user_accounts = list(set(user_accounts))
+        user_ids = list(set(user_ids))
 
-        logging.info("Found {} new users...Saving to {}...".format(len(user_accounts), save_to))
+        logging.info("Found {} new users...".format(len(user_ids)))
 
-        [append_to_file("{},{}\n".format(user_id, username), save_to) for user_id, username in user_accounts]
+        if save_to:
+            logging.info("Saving new users to {}...".format(save_to))
+            [append_to_file("{}\n".format(id), save_to) for id in user_ids]
 
-        return user_accounts
+        return user_ids
+
+    def start(self):
+        # todo: finish this
+        self.API = InstagramAPI(self.username, self.password)
+        followings = len(self.API.get_total_self_followings())
+
+        logging.info("Instafollow started...")
+
+        users = self._get_user_ids()
+        progress = 0
+        while True:
+            if not self.API.is_logged_in:
+                self.API.login()
+
+            if followings >= 7000:
+                sleep(self.interval)
+
+            if not len(users):
+                users = self._get_user_ids()
+
+            id = users.pop(0)
+
+            status = self.API.follow(id)
 
     def start(self, rate, wait):
         start_time = datetime.datetime.now()
@@ -132,8 +158,7 @@ class InstaFollow:
                 wait_time = randint(wait[0], wait[1])
                 elapsed = time() - t0
 
-
-                #wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
+                # wait_time = wait_time - elapsed if wait_time > elapsed else 1.0
 
                 logging.info("{} sent {} requests. Sleeping for {} mins".format(self.username, rate, wait_time / 60))
                 sleep(wait_time)

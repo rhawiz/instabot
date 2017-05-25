@@ -21,6 +21,11 @@ class InstaAccount(db.Model):
         self.password = password
         self.created_at = created_at
 
+        self._create_bots()
+
+    def _create_bots(self):
+        db.session.add(Bot(self.id, BotType.FOLLOW, 1.0, 2.0, 3))
+
     def __repr__(self):
         return '<Username %r>' % self.username
 
@@ -69,9 +74,10 @@ class Bot(db.Model):
     action_interval = Column(Float)
     rate = Column(Integer)
     unix_pid = Column(String(16))
+    active = Column(Boolean)
     created_at = Column(DateTime)
 
-    def __init__(self, insta_account_id, bot, interval, action_interval, rate, unix_pid=None,
+    def __init__(self, insta_account_id, bot, interval, action_interval, rate, active=False, unix_pid=None,
                  created_at=datetime.utcnow()):
         self.insta_account_id = insta_account_id
         self.bot = bot
@@ -79,7 +85,7 @@ class Bot(db.Model):
         self.action_interval = action_interval
         self.rate = rate
         self.unix_pid = unix_pid
-
+        self.active = active
         self.created_at = created_at
 
     def get_user(self):

@@ -13,10 +13,9 @@ from app.core.utils import execute_query
 from core.instabot import post_contents, collect_followers
 from app import app, db
 from .models import Content, InstaAccount, Bot
+from config import Config as cfg
+from config import basedir
 
-UPLOAD_FOLDER = 'static/content'
-UPLOAD_URL = '/content'
-STATIC_URL = '/static'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'mp4'])
 
 DB_PATH = "content.db"
@@ -30,11 +29,10 @@ LOG_FILE = "app.log"
 
 processes = {}
 
-
-@app.route('{}/<path:filename>'.format(UPLOAD_URL))
+print app.config
+@app.route('{}/<path:filename>'.format(cfg.UPLOAD_URL))
 def serve_content(filename):
-    root_dir = os.path.dirname(os.getcwd())
-    return send_from_directory(os.path.join(root_dir, 'static', 'content'), filename)
+    return send_from_directory(os.path.join(basedir, 'app', 'static', 'content'), filename)
 
 
 def allowed_file(filename):
@@ -51,8 +49,10 @@ def home():
 def view_contents():
     # contents = execute_query(DB_PATH, RETRIEVE_CONTENT_QUERY)
     contents = Content.query.all()
-    data = [(c.id, c.get_user().username, c.caption, c.url, c.created_at, c.verified) for c in contents]
-    return render_template('contents.html', content=data)
+    data = [(c.id, c.get_user(), c.caption, c.url, c.created_at, c.verified) for c in contents]
+    accounts = InstaAccount.query.all()
+
+    return render_template('contents.html', content=data, accounts=accounts)
 
 
 @app.route('/logs', methods=['GET'])
@@ -188,9 +188,8 @@ def delete_content():
 def upload_file():
     if request.method == 'POST':
         url = request.form.get('url')
-        user = request.form.get('user')
+        account_id = request.form.get('account')
         caption = request.form.get('caption')
-
         # check if the post request has the file part
         if 'file' not in request.files and url == '':
             # flash('No file part')
@@ -207,10 +206,14 @@ def upload_file():
             fn = "{}.{}".format(str(uuid.uuid4()), ext)
 
             path = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], fn))
-            file_url = "{}/{}".format(UPLOAD_URL, fn)
+            file_url = "{}/{}".format(cfg.UPLOAD_URL, fn)
             file.save(path)
 
-            execute_query(DB_PATH, INSERT_CONTENT_QUERY.format(user=user, caption=caption, path=path, url=file_url))
+            content = Content(insta_account_id=account_id, caption=caption, url=file_url, path=path)
+            db.session.add(content)
+            db.session.commit()
+            # execute_query(DB_PATH,
+            #               INSERT_CONTENT_QUERY.format(user=account_id, caption=caption, path=path, url=file_url))
 
             # return render_template('contents.html', url=path, user=user, caption=caption)
             return redirect(url_for('view_contents'))

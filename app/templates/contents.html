@@ -9,7 +9,16 @@
     <br> <a> or from url <input disabled type="text" name="url" placeholder="not implemented yet"> </a>
     <br>
     <br>
-    User: <input type="text" name="user">
+    User:
+    <select name="account">
+
+        {% for account in accounts %}
+
+        <option value={{account.id}}>{{account.username}}</option>
+
+        {% endfor %}
+    </select>
+
     <br>
     Caption: <input type="text" name="caption">
     <input type="submit" value="Upload">
@@ -42,7 +51,7 @@
     {% for id, user, caption, url, date, verified in content %}
     <tr>
         <td>
-            {{user}}
+            {{user.username}}
         </td>
         <td>
             {{caption}}
@@ -59,9 +68,9 @@
             <form action="/verify" method="post">
                 <button type="submit" value={{id}}>
                     {% if verified == 1 %}
-                        yes
+                    yes
                     {% else %}
-                        no
+                    no
                     {% endif %}
                 </button>
                 <input type="hidden" value={{id}} name="id"/>
@@ -73,7 +82,8 @@
             <form action="/delete" method="post">
 
                 <button type="submit" value={{id}}>X</button>
-                <input type="hidden" value={{id}} name="id"/>
+                <input type="hidden" value={{user.id}} name="user_id"/>
+                <input type="hidden" value={{id}} name="content_id"/>
             </form>
 
         </td>

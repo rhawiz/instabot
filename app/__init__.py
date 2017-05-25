@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config import basedir
+from config import *
 
 app = Flask(__name__)
-app.config.from_object('config')
+app.config.from_object('config.Config')
 db = SQLAlchemy(app)
 
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
