@@ -1,8 +1,7 @@
 from datetime import datetime
 
 import enum
-
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
+from sqlalchemy import Enum, Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
 from app import app, db
 
