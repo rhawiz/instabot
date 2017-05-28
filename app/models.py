@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import enum
+
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
 from app import app, db
@@ -13,18 +14,30 @@ class InstaAccount(db.Model):
     id = Column(Integer, primary_key=True)
     username = Column(String(256), unique=True)
     password = Column(String(256))
-
+    similar_users = Column(String(1024))
     created_at = Column(DateTime)
+    __table_args__ = {'extend_existing': True}
 
-    def __init__(self, username, password, created_at=datetime.utcnow()):
+    def __init__(self, username, password, similar_users, created_at=datetime.utcnow()):
         self.username = username
         self.password = password
+        self.similar_users = similar_users
         self.created_at = created_at
 
-        self._create_bots()
+    def create_bots(self):
+        db.session.add(Bot(self.id, BotType.FOLLOW, 7200, 8.0, 75))
+        db.session.add(Bot(self.id, BotType.UNFOLLOW, 7200, 8.0, 120))
+        db.session.add(Bot(self.id, BotType.POST, 86400, 1.0, 1))
 
-    def _create_bots(self):
-        db.session.add(Bot(self.id, BotType.FOLLOW, 1.0, 2.0, 3))
+    def follow_bot(self):
+        return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.FOLLOW).first()
+
+    def unfollow_bot(self):
+        return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.UNFOLLOW).first()
+
+    def post_bot(self):
+        return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.POST).first()
+
 
     def __repr__(self):
         return '<Username %r>' % self.username
@@ -34,6 +47,7 @@ class Content(db.Model):
     """
     User content model for storing photos and videos
     """
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True)
     insta_account_id = Column(Integer, ForeignKey('insta_account.id'))
     caption = Column(String(1024))
@@ -67,6 +81,7 @@ class Bot(db.Model):
     """
     Bots Model to store active bots
     """
+    __table_args__ = {'extend_existing': True}
     id = Column(Integer, primary_key=True)
     insta_account_id = Column(Integer, ForeignKey('insta_account.id'))
     bot = Column(Enum(BotType))
@@ -88,29 +103,33 @@ class Bot(db.Model):
         self.active = active
         self.created_at = created_at
 
+    def deactivate(self):
+        self.unix_pid = None
+        self.active = False
+
     def get_user(self):
         return InstaAccount.query.filter_by(id=self.insta_account_id).first()
 
     def __repr__(self):
-        return '<User %r Bot %r>' % (self.insta_user_id, self.bot)
+        return '<User %r Bot %r>' % (self.insta_account_id, self.bot)
 
 
 def main():
     db.create_all()
-
-    account = InstaAccount('hwzearth', '1234')
-    db.session.add(account)
     db.session.commit()
-
-    hwzearth = InstaAccount.query.filter_by(username='hwzearth').first()
-    print hwzearth
-    content = Content(hwzearth.id, 'caption', 'url', 'path')
-    bot = Bot(hwzearth.id, BotType.FOLLOW, 1.0, 2.0, 3)
-
-    db.session.add(content)
-    db.session.add(bot)
-    db.session.commit()
-    app.run(host="0.0.0.0", port="5000")
+    # account = InstaAccount('hwzearth', '1234')
+    # db.session.add(account)
+    # db.session.commit()
+    #
+    # hwzearth = InstaAccount.query.filter_by(username='hwzearth').first()
+    # print hwzearth
+    # content = Content(hwzearth.id, 'caption', 'url', 'path')
+    # bot = Bot(hwzearth.id, BotType.FOLLOW, 1.0, 2.0, 3)
+    #
+    # db.session.add(content)
+    # db.session.add(bot)
+    # db.session.commit()
+    # app.run(host="0.0.0.0", port="5000")
 
 
 if __name__ == '__main__':

@@ -5,6 +5,49 @@
     <title>Instabot Dashboard</title>
 </head>
 <body>
+<table>
+    <tr>
+        <td>
+            User
+        </td>
+        <td>
+            Follow Bot
+        </td>
+        <td>
+            Unfollow Bot
+        </td>
+        <td>
+            Post Bot
+        </td>
+    </tr>
 
+    {% for account, follow, unfollow, post in content %}
+    <tr>
+        <td>
+            {{account.username}}
+        </td>
+        <td>
+            {{follow.active}}
+        </td>
+        <td>
+            {{unfollow.active}}
+        </td>
+        <td>
+            {{post.active}}
+        </td>
+
+    </tr>
+    {% endfor %}
+
+</table>
+<form method=post action="/accounts" enctype="multipart/form-data">
+    Username: <input type=text name=username>
+    <br>
+    Password: <input type=password name=password>
+    <br>
+    Similar Users (separated by ,): <input type=text name=users>
+    <br>
+    <button>Add User</button>
+</form>
 </body>
 </html>

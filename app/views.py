@@ -4,6 +4,9 @@ import signal
 import time
 import uuid
 
+import logging
+from sqlite3 import IntegrityError
+
 from flask import Flask, request, redirect, url_for, flash
 from flask import render_template
 from flask import send_from_directory
@@ -12,7 +15,7 @@ from werkzeug.utils import secure_filename
 from app.core.utils import execute_query
 from core.instabot import post_contents, collect_followers
 from app import app, db
-from .models import Content, InstaAccount, Bot
+from models import Content, InstaAccount, Bot
 from config import Config as cfg
 from config import basedir
 
@@ -30,6 +33,8 @@ LOG_FILE = "app.log"
 processes = {}
 
 print app.config
+
+
 @app.route('{}/<path:filename>'.format(cfg.UPLOAD_URL))
 def serve_content(filename):
     return send_from_directory(os.path.join(basedir, 'app', 'static', 'content'), filename)
@@ -93,19 +98,50 @@ def active_bots():
     return render_template('bots.html', content=data)
 
 
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    accounts = [(a, a.follow_bot(), a.unfollow_bot(), a.post_bot()) for a in InstaAccount.query.all()]
+    # data = [(b.unix_pid, b.bot, b.get_user().username, b.rate, b.interval, b.created_at) for b in bots]
+    print accounts
+    return render_template('dashboard.html', content=accounts)
+
+
+@app.route('/accounts', methods=['GET', 'POST'])
+def accounts():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        similar_users = request.form.get('similar_users')
+        account = InstaAccount(username, password, similar_users)
+        try:
+            db.session.add(account)
+            db.session.commit()
+            account.create_bots()
+            db.session.commit()
+        except Exception, e:
+            logging.error(e)
+
+    elif request.method == 'GET':
+        pass
+    # data = [(b.unix_pid, b.bot, b.get_user().username, b.rate, b.interval, b.created_at) for b in bots]
+    return redirect(url_for('dashboard'))
+
+
 @app.route('/stop', methods=['POST'])
 def stop_bot():
     if request.method == 'POST':
         pid = request.form.get('pid')
-        p = processes.get(pid)
 
-        if p:
-            try:
-                os.kill(int(pid), signal.SIGTERM)
-            except OSError, e:
-                print e
-            finally:
-                processes.pop(pid)
+        bot = Bot.query.filter_by(unix_pid=pid).first()
+
+        try:
+            bot.deactivate()
+            os.kill(int(pid), signal.SIGTERM)
+        except OSError, e:
+            logging.error(e)
+
+        db.session.commit()
+
     return redirect(url_for('active_bots'))
 
 
