@@ -1,6 +1,8 @@
+import os
 from datetime import datetime
 
 import enum
+import signal
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
 from app import app, db
@@ -24,8 +26,8 @@ class InstaAccount(db.Model):
         self.created_at = created_at
 
     def create_bots(self):
-        db.session.add(Bot(self.id, BotType.FOLLOW, 7200, 8.0, 75))
-        db.session.add(Bot(self.id, BotType.UNFOLLOW, 7200, 8.0, 120))
+        db.session.add(Bot(self.id, BotType.FOLLOW, 5400, 8.0, 75))
+        db.session.add(Bot(self.id, BotType.UNFOLLOW, 5400, 8.0, 120))
         db.session.add(Bot(self.id, BotType.POST, 86400, 1.0, 1))
 
     def follow_bot(self):
@@ -36,7 +38,6 @@ class InstaAccount(db.Model):
 
     def post_bot(self):
         return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.POST).first()
-
 
     def __repr__(self):
         return '<Username %r>' % self.username
@@ -52,15 +53,20 @@ class Content(db.Model):
     caption = Column(String(1024))
     url = Column(String(512))
     path = Column(String(512))
+    type = Column(String(64))
+    thumbnail = Column(String(512))
     verified = Column(Boolean)
     created_at = Column(DateTime)
 
-    def __init__(self, insta_account_id, caption, url, path, verified=False, created_at=datetime.utcnow()):
+    def __init__(self, insta_account_id, caption, url, path, type, thumbnail=None, verified=False,
+                 created_at=datetime.utcnow()):
         self.insta_account_id = insta_account_id
         self.caption = caption
         self.url = url
         self.path = path
         self.verified = verified
+        self.type = type
+        self.thumbnail = thumbnail
         self.created_at = created_at
 
     def get_user(self):
@@ -74,7 +80,6 @@ class BotType(enum.Enum):
     FOLLOW = "follow"
     UNFOLLOW = "unfollow"
     POST = "post"
-
 
 
 class Bot(db.Model):
@@ -106,6 +111,16 @@ class Bot(db.Model):
     def deactivate(self):
         self.unix_pid = None
         self.active = False
+        os.kill(int(self.unix_pid), signal.SIGTERM)
+        db.session.commit()
+
+    def run(self):
+        if self.bot == BotType.FOLLOW:
+            pass
+        elif self.bot == BotType.UNFOLLOW:
+            pass
+        elif self.bot == BotType.POST:
+            pass
 
     def get_user(self):
         return InstaAccount.query.filter_by(id=self.insta_account_id).first()

@@ -114,7 +114,7 @@ def accounts():
         password = request.form.get('password')
         similar_users = request.form.get('similar_users')
 
-        if username == '' or password =='' or similar_users == '':
+        if username == '' or password == '' or similar_users == '':
             flash("Ensure all fields have been filled in.".format(username), "error")
         elif InstaAccount.query.filter_by(username=username).first():
             flash("User '{}' has already been added.".format(username), "error")
@@ -147,11 +147,9 @@ def stop_bot():
 
         try:
             bot.deactivate()
-            os.kill(int(pid), signal.SIGTERM)
+
         except OSError, e:
             logging.error(e)
-
-        db.session.commit()
 
     return redirect(url_for('active_bots'))
 
@@ -256,7 +254,14 @@ def upload_file():
             file_url = "{}/{}".format(cfg.UPLOAD_URL, fn)
             file.save(path)
 
-            content = Content(insta_account_id=account_id, caption=caption, url=file_url, path=path)
+            type = "photo"
+            thumbnail = None
+            if ext == 'mp4':
+                type = "video"
+                thumbnail = None
+
+            content = Content(insta_account_id=account_id, caption=caption, url=file_url, path=path, type=type,
+                              thumbnail=thumbnail)
             db.session.add(content)
             db.session.commit()
             # execute_query(DB_PATH,
