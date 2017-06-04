@@ -5,6 +5,7 @@ from config import *
 app = Flask(__name__)
 app.config.from_object('config.Config')
 db = SQLAlchemy(app)
+app.secret_key = 'test'
 
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 

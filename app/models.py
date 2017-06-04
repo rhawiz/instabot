@@ -76,6 +76,7 @@ class BotType(enum.Enum):
     POST = "post"
 
 
+
 class Bot(db.Model):
     """
     Bots Model to store active bots

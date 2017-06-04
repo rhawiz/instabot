@@ -42,5 +42,8 @@
     * Tags from caption content
     * Tags from image
 * Upload image from URL
+* Content collector
+* Dashboard
+* Verify insta account before adding
 
 

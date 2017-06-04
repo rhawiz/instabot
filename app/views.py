@@ -5,13 +5,9 @@ import time
 import uuid
 
 import logging
-from sqlite3 import IntegrityError
-
-from flask import Flask, request, redirect, url_for, flash
-from flask import render_template
-from flask import send_from_directory
+from flask import request, redirect, url_for, flash, render_template, send_from_directory
 from werkzeug.utils import secure_filename
-
+from app.core.instagramapi import InstagramAPI as API
 from app.core.utils import execute_query
 from core.instabot import post_contents, collect_followers
 from app import app, db
@@ -31,8 +27,6 @@ UNVERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 0 WHERE ROWID={id}
 LOG_FILE = "app.log"
 
 processes = {}
-
-print app.config
 
 
 @app.route('{}/<path:filename>'.format(cfg.UPLOAD_URL))
@@ -106,20 +100,37 @@ def dashboard():
     return render_template('dashboard.html', content=accounts)
 
 
+def verify_account(username, password):
+    api = API(username=username, password=password)
+    api.login()
+
+    return True if api.last_response.status_code == 200 else False
+
+
 @app.route('/accounts', methods=['GET', 'POST'])
 def accounts():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         similar_users = request.form.get('similar_users')
-        account = InstaAccount(username, password, similar_users)
-        try:
-            db.session.add(account)
-            db.session.commit()
-            account.create_bots()
-            db.session.commit()
-        except Exception, e:
-            logging.error(e)
+
+        if username == '' or password =='' or similar_users == '':
+            flash("Ensure all fields have been filled in.".format(username), "error")
+        elif InstaAccount.query.filter_by(username=username).first():
+            flash("User '{}' has already been added.".format(username), "error")
+        elif verify_account(username, password):
+            account = InstaAccount(username, password, similar_users)
+            try:
+                db.session.add(account)
+                db.session.commit()
+                account.create_bots()
+                db.session.commit()
+            except Exception, e:
+                logging.error(e)
+            flash("User '{}' succesfully added.".format(username), "success")
+
+        else:
+            flash("Invalid credentials for user '{}'".format(username), "error")
 
     elif request.method == 'GET':
         pass
@@ -255,9 +266,5 @@ def upload_file():
             return redirect(url_for('view_contents'))
 
 
-def main():
-    app.run(host="0.0.0.0", port="5000")
-
-
 if __name__ == '__main__':
-    main()
+    app.run(host="0.0.0.0", port="5000")
