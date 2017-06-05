@@ -11,6 +11,9 @@
             User
         </td>
         <td>
+            Similar Users
+        </td>
+        <td>
             Follow Bot
         </td>
         <td>
@@ -19,6 +22,9 @@
         <td>
             Post Bot
         </td>
+        <td>
+            x
+        </td>
     </tr>
 
     {% for account, follow, unfollow, post in content %}
@@ -26,6 +32,9 @@
     <tr>
         <td>
             {{account.username}}
+        </td>
+        <td>
+            {{account.similar_users}}
         </td>
         <td>
             <form method="post" action="/toggle">
@@ -51,6 +60,15 @@
                 </button>
             </form>
 
+        </td>
+
+        <td>
+            <form method="POST" action="/delete_account">
+                <input type="hidden" name="user_id" value={{account.id}}>
+                <button type="submit">
+                    x
+                </button>
+            </form>
         </td>
 
     </tr>

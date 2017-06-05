@@ -90,6 +90,7 @@ class BotType(enum.Enum):
 
 
 def instafollow_worker(user, action_interval, rate, interval):
+    print user.similar_users
     bot = InstaFollow(
         username=user.username,
         password=user.password,
@@ -99,13 +100,7 @@ def instafollow_worker(user, action_interval, rate, interval):
         interval=interval
     )
 
-    attempts = 0
-    while attempts < 10:
-        attempts += 1
-        try:
-            bot.start()
-        except Exception, e:
-            print e
+    bot.start()
 
 
 def instaunfollow_worker(user, action_interval, rate, interval):

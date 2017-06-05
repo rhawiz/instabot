@@ -96,7 +96,6 @@ def active_bots():
 def dashboard():
     accounts = [(a, a.follow_bot(), a.unfollow_bot(), a.post_bot()) for a in InstaAccount.query.all()]
     # data = [(b.unix_pid, b.bot, b.get_user().username, b.rate, b.interval, b.created_at) for b in bots]
-    print accounts
     return render_template('dashboard.html', content=accounts)
 
 
@@ -127,7 +126,7 @@ def accounts():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        similar_users = request.form.get('similar_users')
+        similar_users = request.form.get('users')
 
         if username == '' or password == '' or similar_users == '':
             flash("Ensure all fields have been filled in.".format(username), "error")
@@ -149,7 +148,19 @@ def accounts():
 
     elif request.method == 'GET':
         pass
+
     # data = [(b.unix_pid, b.bot, b.get_user().username, b.rate, b.interval, b.created_at) for b in bots]
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/delete_account', methods=['POST'])
+def delete_account():
+    if request.method == 'POST':
+        user_id = request.form.get('user_id')
+        account = InstaAccount.query.filter_by(id=user_id).first()
+        if account:
+            db.session.delete(account)
+            db.session.commit()
     return redirect(url_for('dashboard'))
 
 
