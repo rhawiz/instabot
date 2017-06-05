@@ -18,8 +18,6 @@ from config import basedir
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'mp4'])
 
 DB_PATH = "content.db"
-INSERT_CONTENT_QUERY = "INSERT INTO insta_content ('user', 'caption', 'path', 'url')  VALUES ('{user}', '{caption}', '{path}', '{url}');"
-RETRIEVE_CONTENT_QUERY = "SELECT rowid, user, caption, url, created_at, verified from insta_content"
 DELETE_CONTENT_QUERY = "DELETE from insta_content WHERE ROWID = {id}"
 VERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 1 WHERE ROWID={id};"
 UNVERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 0 WHERE ROWID={id};"
@@ -46,9 +44,8 @@ def home():
 
 @app.route('/content', methods=['GET'])
 def view_contents():
-    # contents = execute_query(DB_PATH, RETRIEVE_CONTENT_QUERY)
     contents = Content.query.all()
-    data = [(c.id, c.get_user(), c.caption, c.url, c.created_at, c.verified) for c in contents]
+    data = [(c.id, c.get_user(), c.caption, c.url, c.created_at, c.verified, c.type) for c in contents]
     accounts = InstaAccount.query.all()
 
     return render_template('contents.html', content=data, accounts=accounts)
@@ -245,13 +242,16 @@ def post_bot():
     return redirect(url_for('active_bots'))
 
 
-@app.route('/delete', methods=['POST'])
+@app.route('/delete_content', methods=['POST'])
 def delete_content():
     if request.method == 'POST':
         id = request.form.get("id")
 
-        query = DELETE_CONTENT_QUERY.format(id=id)
-        execute_query(DB_PATH, query)
+        content = Content.query.filter_by(id=id).first()
+        if content:
+            db.session.delete(content)
+            db.session.commit()
+
         return redirect(url_for('view_contents'))
 
 
@@ -290,10 +290,7 @@ def upload_file():
                               thumbnail=thumbnail)
             db.session.add(content)
             db.session.commit()
-            # execute_query(DB_PATH,
-            #               INSERT_CONTENT_QUERY.format(user=account_id, caption=caption, path=path, url=file_url))
 
-            # return render_template('contents.html', url=path, user=user, caption=caption)
             return redirect(url_for('view_contents'))
 
 

@@ -44,11 +44,14 @@
             <b>verified</b>
         </td>
         <td>
+            <b>type</b>
+        </td>
+        <td>
             <b>delete</b>
         </td>
     </tr>
 
-    {% for id, user, caption, url, date, verified in content %}
+    {% for id, user, caption, url, date, verified, type in content %}
     <tr>
         <td>
             {{user.username}}
@@ -77,9 +80,12 @@
                 <input type="hidden" value={{verified}} name="verified"/>
             </form>
         </td>
+        <td>
+            {{type}}
+        </td>
 
         <td>
-            <form action="/delete" method="post">
+            <form action="/delete_content" method="post">
 
                 <button type="submit" value={{id}}>X</button>
                 <input type="hidden" value={{user.id}} name="user_id"/>
