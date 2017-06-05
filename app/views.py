@@ -24,7 +24,7 @@ DELETE_CONTENT_QUERY = "DELETE from insta_content WHERE ROWID = {id}"
 VERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 1 WHERE ROWID={id};"
 UNVERIFY_CONTENT_QUERY = "UPDATE insta_content SET verified = 0 WHERE ROWID={id};"
 
-LOG_FILE = "app.log"
+LOG_FILE = "/var/log/apache2/error.log"
 
 processes = {}
 
