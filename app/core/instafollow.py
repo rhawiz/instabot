@@ -26,14 +26,8 @@ class InstaFollow:
         self.rate = rate
         self.interval = interval
 
-        logging.basicConfig(
-            filename="app.log",
-            format='[%(asctime)s][%(levelname)s][{}] %(message)s'.format(username),
-            datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
-        )
-
     def _get_user_ids(self, save_to=None):
-        logging.info('Collecting users to follow...')
+        logging.info('Collecting users to follow...', extra={'user': self.username})
 
         # Randomly select root account to search for users
         account = self.similar_users[randint(0, len(self.similar_users) - 1)]
@@ -62,7 +56,7 @@ class InstaFollow:
             try:
                 users = self.API.last_json.get('users')
             except ChunkedEncodingError, e:
-                logging.error("Failed to retrieve user list", e)
+                logging.error("Failed to retrieve user list", e, extra={'user': self.username})
                 users = []
 
             for user in users:
@@ -71,11 +65,7 @@ class InstaFollow:
 
         user_ids = list(set(user_ids))
 
-        logging.info("Found {} new users...".format(len(user_ids)))
-
-        if save_to:
-            logging.info("Saving new users to {}...".format(save_to))
-            [append_to_file("{}\n".format(id), save_to) for id in user_ids]
+        logging.info("Found {} new users...".format(len(user_ids)), extra={'user': self.username})
 
         return user_ids
 
@@ -83,7 +73,7 @@ class InstaFollow:
 
         self.API = InstagramAPI(self.username, self.password)
         self.API.login()
-        logging.info("Follow bot started...")
+        logging.info("Follow bot started...", extra={'user': self.username})
 
         users = self._get_user_ids()
         progress = 0
@@ -95,7 +85,8 @@ class InstaFollow:
             followings = len(self.API.get_total_self_followings())
 
             if followings >= 7000:
-                logging.info("{} >= 7000, sleeping for {} mins.".format(len(users), self.interval / 60))
+                logging.info("{} >= 7000, sleeping for {} mins.".format(len(users), self.interval / 60),
+                             extra={'user': self.username})
                 sleep(self.interval)
                 continue
 
@@ -103,14 +94,14 @@ class InstaFollow:
                 try:
                     users = self._get_user_ids()
                 except Exception, e:
-                    logging.error(e.message, e)
+                    logging.error(e.message, e, extra={'user': self.username})
                     continue
 
             id = users.pop(0)
 
             self.API.follow(id)
 
-            logging.debug(self.API.last_response.content)
+            logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))

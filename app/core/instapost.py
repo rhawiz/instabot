@@ -15,12 +15,6 @@ class InstaPost:
         self.interval = interval
         self.interval = interval
 
-        logging.basicConfig(
-            filename="app.log",
-            format='[%(asctime)s][%(levelname)s][{}] %(message)s'.format(username),
-            datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
-        )
-
     def _get_content(self):
         from app.models import Content, InstaAccount
 
@@ -31,7 +25,7 @@ class InstaPost:
 
         self.API = InstagramAPI(self.username, self.password)
         self.API.login()
-        logging.info("Post bot started...")
+        logging.info("Post bot started...", extra={'user': self.username})
 
         progress = 0
         while True:
@@ -45,7 +39,7 @@ class InstaPost:
             elif content.type == 'video':
                 self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
 
-            logging.debug(self.API.last_response.content)
+            logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))

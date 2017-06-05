@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from config import *
@@ -16,5 +17,18 @@ my_loader = jinja2.ChoiceLoader([
     jinja2.FileSystemLoader(['templates']),
 ])
 app.jinja_loader = my_loader
+
+logger = logging.getLogger(__name__)
+syslog = logging.StreamHandler()
+formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)] %(message)s')
+syslog.setFormatter(formatter)
+logger.setLevel(logging.INFO)
+logger.addHandler(syslog)
+
+# logging.basicConfig(
+#     filename="app.log",
+#     format='[%(asctime)s][%(levelname)s][%(user)] %(message)s',
+#     datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
+# )
 
 from app import views, models

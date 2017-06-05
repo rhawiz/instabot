@@ -17,14 +17,9 @@ class InstaUnfollow:
         self.interval = interval
         self.unfollow_all = unfollow_all
         self.API = InstagramAPI(self.username, self.password)
-        logging.basicConfig(
-            filename="app.log",
-            format='[%(asctime)s][%(levelname)s][{}] %(message)s'.format(username),
-            datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
-        )
 
     def _get_user_ids(self):
-        logging.info('Collecting users to unfollow...')
+        logging.info('Collecting users to unfollow...', extra={'user': self.username})
 
         # Get people followings
         following_details = self.API.get_total_self_followings()
@@ -62,7 +57,7 @@ class InstaUnfollow:
         self.API = InstagramAPI(self.username, self.password)
         self.API.login()
 
-        logging.info("Unfollow bot started...")
+        logging.info("Unfollow bot started...", extra={'user': self.username})
 
         users = self._get_user_ids()
 
@@ -74,7 +69,8 @@ class InstaUnfollow:
                 self.API.login()
 
             if len(users) < 7000:
-                logging.info("{} < 7000, sleeping for {} mins.".format(len(users), self.interval/60))
+                logging.info("{} < 7000, sleeping for {} mins.".format(len(users), self.interval / 60),
+                             extra={'user': self.username})
                 sleep(self.interval)
                 continue
 
@@ -82,14 +78,14 @@ class InstaUnfollow:
                 try:
                     users = self._get_user_ids()
                 except Exception, e:
-                    logging.error(e.message, e)
+                    logging.error(e.message, e, extra={'user': self.username})
                     continue
 
             id = users.pop(0)
 
             self.API.unfollow(id)
 
-            logging.debug(self.API.last_response.content)
+            logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
