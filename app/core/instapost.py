@@ -1,15 +1,7 @@
-import datetime
-import json
 import logging
-import os
-from random import randint, uniform
-from time import sleep, time
+from random import uniform
+from time import sleep
 
-import click
-from requests.exceptions import ChunkedEncodingError
-
-from app.core.utils import csv_to_list, append_to_file, pop_text_file
-from app.models import Content, InstaAccount
 from instagramapi import InstagramAPI
 
 
@@ -30,6 +22,8 @@ class InstaPost:
         )
 
     def _get_content(self):
+        from app.models import Content, InstaAccount
+
         insta_account = InstaAccount.query.filter_by(username=self.username).first()
         return Content.query.filter_by(insta_account_id=insta_account.id).first()
 

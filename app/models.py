@@ -3,9 +3,16 @@ from datetime import datetime
 
 import enum
 import signal
+
+import multiprocessing
+
+import logging
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
 from app import app, db
+from app.core.instafollow import InstaFollow
+from app.core.instapost import InstaPost
+from app.core.instaunfollow import InstaUnfollow
 
 
 class InstaAccount(db.Model):
@@ -82,6 +89,61 @@ class BotType(enum.Enum):
     POST = "post"
 
 
+def instafollow_worker(user, action_interval, rate, interval):
+    bot = InstaFollow(
+        username=user.username,
+        password=user.password,
+        similar_users=user.similar_users,
+        action_interval=action_interval,
+        rate=rate,
+        interval=interval
+    )
+
+    attempts = 0
+    while attempts < 10:
+        attempts += 1
+        try:
+            bot.start()
+        except Exception, e:
+            print e
+
+
+def instaunfollow_worker(user, action_interval, rate, interval):
+    bot = InstaUnfollow(
+        username=user.username,
+        password=user.password,
+        action_interval=action_interval,
+        rate=rate,
+        interval=interval
+    )
+
+    attempts = 0
+    while attempts < 10:
+        attempts += 1
+        try:
+            bot.start()
+        except Exception, e:
+            print e
+
+
+def instapost_worker(user, action_interval, rate, interval):
+    bot = InstaPost(
+        username=user.username,
+        password=user.password,
+        action_interval=action_interval,
+        rate=rate,
+        interval=interval
+    )
+
+    attempts = 0
+    while attempts < 10:
+        attempts += 1
+        try:
+            bot.start()
+        except Exception, e:
+            print e
+
+
 class Bot(db.Model):
     """
     Bots Model to store active bots
@@ -109,18 +171,44 @@ class Bot(db.Model):
         self.created_at = created_at
 
     def deactivate(self):
-        self.unix_pid = None
-        self.active = False
-        os.kill(int(self.unix_pid), signal.SIGTERM)
+        try:
+            os.kill(int(self.unix_pid), signal.SIGTERM)
+        except OSError as e:
+            logging.error("Could not kill process", e)
+        finally:
+            self.unix_pid = None
+            self.active = False
+
         db.session.commit()
 
-    def run(self):
+    def activate(self):
+        user = self.get_user()
         if self.bot == BotType.FOLLOW:
-            pass
+
+            p = multiprocessing.Process(
+                target=instafollow_worker,
+                args=(user, self.action_interval, self.rate, self.interval,)
+            )
+
         elif self.bot == BotType.UNFOLLOW:
-            pass
+
+            p = multiprocessing.Process(
+                target=instaunfollow_worker,
+                args=(user, self.action_interval, self.rate, self.interval,)
+            )
+
         elif self.bot == BotType.POST:
-            pass
+            p = multiprocessing.Process(
+                target=instapost_worker,
+                args=(user, self.action_interval, self.rate, self.interval,)
+            )
+
+        print p
+        p.start()
+        self.unix_pid = p.pid
+        self.active = True
+        print p.pid
+        db.session.commit()
 
     def get_user(self):
         return InstaAccount.query.filter_by(id=self.insta_account_id).first()

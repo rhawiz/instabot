@@ -100,6 +100,21 @@ def dashboard():
     return render_template('dashboard.html', content=accounts)
 
 
+@app.route('/toggle', methods=['POST'])
+def toggle_bot():
+    if request.method == 'POST':
+        bot_id = request.form.get('bot_id')
+        print bot_id
+        bot = Bot.query.filter_by(id=bot_id).first()
+        print bot
+        if bot.active:
+            bot.deactivate()
+        else:
+            bot.activate()
+
+        return redirect(url_for('dashboard'))
+
+
 def verify_account(username, password):
     api = API(username=username, password=password)
     api.login()

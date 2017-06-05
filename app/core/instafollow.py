@@ -25,7 +25,6 @@ class InstaFollow:
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
-        self.interval = interval
 
         logging.basicConfig(
             filename="app.log",
@@ -96,7 +95,7 @@ class InstaFollow:
             followings = len(self.API.get_total_self_followings())
 
             if followings >= 7000:
-                logging.info("{} >= 7000, sleeping for {} mins.".format(len(users), self.interval/60))
+                logging.info("{} >= 7000, sleeping for {} mins.".format(len(users), self.interval / 60))
                 sleep(self.interval)
                 continue
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>Instabot Dashboard</title>
@@ -22,24 +22,43 @@
     </tr>
 
     {% for account, follow, unfollow, post in content %}
+
     <tr>
         <td>
             {{account.username}}
         </td>
         <td>
-            {{follow.active}}
+            <form method="post" action="/toggle">
+                <input type="hidden" name="bot_id" value={{follow.id}}>
+                <button type="submit">
+                    {{follow.active}}
+                </button>
+            </form>
         </td>
         <td>
-            {{unfollow.active}}
+            <form method="post" action="/toggle">
+                <input type="hidden" name="bot_id" value={{unfollow.id}}>
+                <button type="submit">
+                    {{unfollow.active}}
+                </button>
+            </form>
         </td>
         <td>
-            {{post.active}}
+            <form method="post" action="/toggle">
+                <input type="hidden" name="bot_id" value={{post.id}}>
+                <button type="submit">
+                    {{post.active}}
+                </button>
+            </form>
+
         </td>
 
     </tr>
     {% endfor %}
 
 </table>
+<br>
+<br>
 <form method=post action="/accounts" enctype="multipart/form-data">
     Username: <input type=text name=username>
     <br>
@@ -51,12 +70,12 @@
 </form>
 <br>
 {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-        <a class="{{ category }}">{{ message }}</a>
-        <br>
-    {% endfor %}
-  {% endif %}
+{% if messages %}
+{% for category, message in messages %}
+<a class="{{ category }}">{{ message }}</a>
+<br>
+{% endfor %}
+{% endif %}
 {% endwith %}
 
 </body>
