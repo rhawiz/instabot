@@ -14,20 +14,14 @@
             Similar Users
         </td>
         <td>
-            Follow Bot
-        </td>
-        <td>
-            Unfollow Bot
-        </td>
-        <td>
-            Post Bot
+            Bot
         </td>
         <td>
             x
         </td>
     </tr>
 
-    {% for account, follow, unfollow, post in content %}
+    {% for account in accounts %}
 
     <tr>
         <td>
@@ -38,28 +32,11 @@
         </td>
         <td>
             <form method="post" action="/toggle">
-                <input type="hidden" name="bot_id" value={{follow.id}}>
+                <input type="hidden" name="account_id" value={{account.id}}>
                 <button type="submit">
-                    {{follow.active}}
+                    {{account.active}}
                 </button>
             </form>
-        </td>
-        <td>
-            <form method="post" action="/toggle">
-                <input type="hidden" name="bot_id" value={{unfollow.id}}>
-                <button type="submit">
-                    {{unfollow.active}}
-                </button>
-            </form>
-        </td>
-        <td>
-            <form method="post" action="/toggle">
-                <input type="hidden" name="bot_id" value={{post.id}}>
-                <button type="submit">
-                    {{post.active}}
-                </button>
-            </form>
-
         </td>
 
         <td>

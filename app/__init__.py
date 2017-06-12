@@ -25,6 +25,24 @@ syslog.setFormatter(formatter)
 logger.setLevel(logging.INFO)
 logger.addHandler(syslog)
 
+bot_config = {
+    'follow': {
+        'action_interval': 8.0,
+        'interval': 5400,
+        'rate': 75
+    },
+    'unfollow': {
+        'action_interval': 8.0,
+        'interval': 5400,
+        'rate': 120
+    },
+    'post': {
+        'action_interval': 8.0,
+        'interval': 1.0,
+        'rate': 1
+    }
+}
+
 # logging.basicConfig(
 #     filename="app.log",
 #     format='[%(asctime)s][%(levelname)s][%(user)] %(message)s',

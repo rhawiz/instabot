@@ -1,14 +1,7 @@
-import datetime
-import json
 import logging
-import os
 from random import randint, uniform
-from time import sleep, time
-
-import click
+from time import sleep
 from requests.exceptions import ChunkedEncodingError
-
-from app.core.utils import csv_to_list, append_to_file, pop_text_file
 from instagramapi import InstagramAPI
 
 
@@ -25,8 +18,10 @@ class InstaFollow:
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
+        self.API = InstagramAPI(self.username, self.password)
 
     def _get_user_ids(self, save_to=None):
+
         logging.info('Collecting users to follow...', extra={'user': self.username})
 
         # Randomly select root account to search for users
@@ -69,33 +64,32 @@ class InstaFollow:
 
         return user_ids
 
+    def _login(self):
+        attempts = 0
+        while attempts <= 10:
+            try:
+                if self.API.login():
+                    return True
+            except Exception as e:
+                logging.error("Failed to login", e)
+            print self.API.last_response.content
+            sleep(6)
+            attempts += 1
+
+        return False
+
     def start(self):
 
-        self.API = InstagramAPI(self.username, self.password)
-        self.API.login()
-        logging.info("Follow bot started...", extra={'user': self.username})
+        if not self._login():
+            return False
 
+        logging.info("Follow bot started...", extra={'user': self.username})
         users = self._get_user_ids()
         progress = 0
-        while True:
+        while users:
             progress += 1
             if not self.API.is_logged_in:
                 self.API.login()
-
-            followings = len(self.API.get_total_self_followings())
-
-            if followings >= 7000:
-                logging.info("{} >= 7000, sleeping for {} mins.".format(len(users), self.interval / 60),
-                             extra={'user': self.username})
-                sleep(self.interval)
-                continue
-
-            if not len(users):
-                try:
-                    users = self._get_user_ids()
-                except Exception, e:
-                    logging.error(e.message, e, extra={'user': self.username})
-                    continue
 
             id = users.pop(0)
 

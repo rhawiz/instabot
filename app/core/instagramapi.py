@@ -93,7 +93,8 @@ class InstagramAPI:
             # if you need proxy make something like this:
             # self.s.proxies = {"https" : "http://proxyip:proxyport"}
             if (
-            self.send_request('si/fetch_headers/?challenge_type=signup&guid=' + self.generate_uuid(False), None, True)):
+                    self.send_request('si/fetch_headers/?challenge_type=signup&guid=' + self.generate_uuid(False), None,
+                                      True)):
 
                 data = {
                     'phone_id': self.generate_uuid(True),
@@ -199,7 +200,7 @@ class InstagramAPI:
                                'Connection': 'keep-alive',
                                'User-Agent': self.USER_AGENT})
         response = self.s.post(self.API_URL + "upload/video/", data=m.to_string())
-        print response.text
+
         if response.status_code == 200:
             body = json.loads(response.text)
             upload_url = body['video_upload_urls'][3]['url']
@@ -234,13 +235,11 @@ class InstagramAPI:
 
                 self.s.headers.update({'Content-Length': str(end - start), 'Content-Range': content_range, })
                 response = self.s.post(upload_url, data=videoData[start:start + length])
-                print upload_url
-                print response.text
 
             self.s.headers = headers
-            print response.status_code
+
             if response.status_code == 200:
-                print upload_id, video, thumbnail, caption
+
                 if self.configure_video(upload_id, video, thumbnail, caption):
                     self.expose()
         return False
@@ -674,7 +673,8 @@ class InstagramAPI:
             self.last_json = json.loads(response.text)
             return True
         else:
-            print ("Request return " + str(response.status_code) + " error!")
+            print "Request return " + str(response.status_code) + " error!"
+            print response.content
             # for debugging
             try:
                 self.last_response = response

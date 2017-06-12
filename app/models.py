@@ -1,4 +1,5 @@
 import os
+import threading
 from datetime import datetime
 
 import enum
@@ -9,7 +10,7 @@ import multiprocessing
 import logging
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
-from app import app, db
+from app import app, db, bot_config
 from app.core.instafollow import InstaFollow
 from app.core.instapost import InstaPost
 from app.core.instaunfollow import InstaUnfollow
@@ -23,19 +24,63 @@ class InstaAccount(db.Model):
     username = Column(String(256), unique=True)
     password = Column(String(256))
     similar_users = Column(String(1024))
+    pid = Column(Integer)
+    active = Column(Boolean)
     created_at = Column(DateTime)
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self, username, password, similar_users, created_at=datetime.utcnow()):
+    def __init__(self, username, password, similar_users, pid=None, active=False, created_at=datetime.utcnow()):
         self.username = username
         self.password = password
         self.similar_users = similar_users
         self.created_at = created_at
+        self.pid = pid
+        self.active = active
 
-    def create_bots(self):
-        db.session.add(Bot(self.id, BotType.FOLLOW, 5400, 8.0, 75))
-        db.session.add(Bot(self.id, BotType.UNFOLLOW, 5400, 8.0, 120))
-        db.session.add(Bot(self.id, BotType.POST, 86400, 1.0, 1))
+    def deactivate(self):
+        try:
+            os.kill(int(self.pid), signal.SIGTERM)
+        except Exception as e:
+            logging.error("Could not kill process", e)
+        finally:
+            self.pid = None
+            self.active = False
+
+        db.session.commit()
+
+    def activate(self):
+        base_config = {
+            'username': self.username,
+            'password': self.password
+        }
+
+        follow_config = bot_config.get('follow')
+        follow_config.update(base_config)
+        follow_config['similar_users'] = self.similar_users
+
+        unfollow_config = bot_config.get('unfollow')
+        unfollow_config.update(base_config)
+
+        post_config = bot_config.get('post')
+        post_config.update(base_config)
+
+        follow_bot = InstaFollow(**follow_config)
+        unfollow_bot = InstaUnfollow(**unfollow_config)
+        post_bot = InstaPost(**post_config)
+        p = multiprocessing.Process(
+            target=bot_worker,
+            args=(follow_bot, unfollow_bot, post_bot,)
+        )
+
+        logging.info("Created process {}".format(p.pid))
+
+        self.pid = p.pid
+        print self.pid
+        self.active = True
+
+        p.start()
+
+        db.session.commit()
 
     def follow_bot(self):
         return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.FOLLOW).first()
@@ -83,60 +128,42 @@ class Content(db.Model):
         return '<User %r> <URL %r>' % (self.insta_account_id, self.url)
 
 
+def bot_worker(follow, unfollow, post):
+    t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
+    # t2 = threading.Thread(target=instapost_worker, args=(post,))
+    print t1, t1.is_alive
+    # print t2, t2.is_alive
+    t1.start()
+    # t2.start()
+
+    t1.join()
+    # t2.join()
+
+
+def grow_followers_worker(follow_bot, unfollow_bot):
+    while True:
+        try:
+            unfollow_bot.start()
+        except Exception, e:
+            logging.critical("Unfollow failed to start", e)
+        try:
+            follow_bot.start()
+        except Exception, e:
+            logging.critical("Follow failed to start", e)
+
+
+def instapost_worker(bot):
+    while True:
+        try:
+            bot.start()
+        except Exception, e:
+            logging.critical(e)
+
+
 class BotType(enum.Enum):
     FOLLOW = "follow"
     UNFOLLOW = "unfollow"
     POST = "post"
-
-
-def instafollow_worker(user, action_interval, rate, interval):
-    print user.similar_users
-    bot = InstaFollow(
-        username=user.username,
-        password=user.password,
-        similar_users=user.similar_users,
-        action_interval=action_interval,
-        rate=rate,
-        interval=interval
-    )
-
-    bot.start()
-
-
-def instaunfollow_worker(user, action_interval, rate, interval):
-    bot = InstaUnfollow(
-        username=user.username,
-        password=user.password,
-        action_interval=action_interval,
-        rate=rate,
-        interval=interval
-    )
-
-    attempts = 0
-    while attempts < 10:
-        attempts += 1
-        try:
-            bot.start()
-        except Exception, e:
-            print e
-
-
-def instapost_worker(user, action_interval, rate, interval):
-    bot = InstaPost(
-        username=user.username,
-        password=user.password,
-        action_interval=action_interval,
-        rate=rate,
-        interval=interval
-    )
-
-    attempts = 0
-    while attempts < 10:
-        attempts += 1
-        try:
-            bot.start()
-        except Exception, e:
-            print e
 
 
 class Bot(db.Model):
@@ -176,34 +203,38 @@ class Bot(db.Model):
 
         db.session.commit()
 
-    def activate(self):
+    def activate(self, pid):
+        self.unix_pid = pid
+        self.active = True
+        db.session.commit()
+
+    def create(self):
         user = self.get_user()
         if self.bot == BotType.FOLLOW:
-
-            p = multiprocessing.Process(
-                target=instafollow_worker,
-                args=(user, self.action_interval, self.rate, self.interval,)
+            return InstaFollow(
+                username=user.username,
+                password=user.password,
+                action_interval=self.action_interval,
+                rate=self.rate,
+                interval=self.interval,
+                similar_users=user.similar_users
             )
-
         elif self.bot == BotType.UNFOLLOW:
-
-            p = multiprocessing.Process(
-                target=instaunfollow_worker,
-                args=(user, self.action_interval, self.rate, self.interval,)
+            return InstaUnfollow(
+                username=user.username,
+                password=user.password,
+                action_interval=self.action_interval,
+                rate=self.rate,
+                interval=self.interval
             )
-
         elif self.bot == BotType.POST:
-            p = multiprocessing.Process(
-                target=instapost_worker,
-                args=(user, self.action_interval, self.rate, self.interval,)
+            return InstaPost(
+                username=user.username,
+                password=user.password,
+                action_interval=self.action_interval,
+                rate=self.rate,
+                interval=self.interval
             )
-
-        print p
-        p.start()
-        self.unix_pid = p.pid
-        self.active = True
-        print p.pid
-        db.session.commit()
 
     def get_user(self):
         return InstaAccount.query.filter_by(id=self.insta_account_id).first()

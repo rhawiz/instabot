@@ -13,7 +13,7 @@ class InstaPost:
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
-        self.interval = interval
+        self.API = InstagramAPI(self.username, self.password)
 
     def _get_content(self):
         from app.models import Content, InstaAccount
@@ -21,10 +21,24 @@ class InstaPost:
         insta_account = InstaAccount.query.filter_by(username=self.username).first()
         return Content.query.filter_by(insta_account_id=insta_account.id).first()
 
+    def _login(self):
+        attempts = 0
+        while attempts <= 10:
+            try:
+                if self.API.login():
+                    return True
+            except Exception as e:
+                logging.error("Failed to login", e)
+            print self.API.last_response.content
+            sleep(6)
+            attempts += 1
+
+        return False
+
     def start(self):
 
-        self.API = InstagramAPI(self.username, self.password)
-        self.API.login()
+        if not self._login():
+            return False
         logging.info("Post bot started...", extra={'user': self.username})
 
         progress = 0
