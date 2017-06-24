@@ -52,10 +52,10 @@ def get_image_size(fname):
 class InstagramAPI:
     API_URL = 'https://i.instagram.com/api/v1/'
     DEVICE_SETTINTS = {
-        'manufacturer': 'SAMSUNG',
-        'model': 'SM-G925F',
-        'android_version': 23,
-        'android_release': '6.0.1'
+        'manufacturer': 'Xiaomi',
+        'model': 'HM 1SW',
+        'android_version': 18,
+        'android_release': '4.3'
     }
     USER_AGENT = 'Instagram 9.2.0 Android ({android_version}/{android_release}; 320dpi; 720x1280; {manufacturer}; {model}; armani; qcom; en_US)'.format(
         **DEVICE_SETTINTS)
