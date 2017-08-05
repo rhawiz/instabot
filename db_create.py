@@ -4,4 +4,5 @@ from app import db, app
 
 print("CREATING DB")
 print(app.config.get("SQLALCHEMY_DATABASE_URI"))
-db.create_all()
+r = db.create_all()
+print(r)
