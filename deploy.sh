@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 sudo git pull
+pip install -r requirements.txt
 sudo rm instabot.db
 python db_create.py
 sudo chmod 664 instabot.db
