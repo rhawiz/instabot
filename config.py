@@ -13,3 +13,5 @@ class Config(object):
     UPLOAD_FOLDER = os.path.join(basedir, 'app/static/content')
     UPLOAD_URL = '/content'
     STATIC_URL = '/static'
+
+print('sqlite:///' + os.path.join(basedir, 'instabot.db'))

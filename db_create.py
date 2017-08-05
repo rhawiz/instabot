@@ -2,5 +2,5 @@
 
 from app import db, logger
 
-logger.info("CREATING DATABASE")
+print("CREATING DB")
 db.create_all()
