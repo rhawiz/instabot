@@ -29,7 +29,6 @@ class InstaPost:
                     return True
             except Exception as e:
                 logging.error("Failed to login", e)
-            print self.API.last_response.content
             sleep(6)
             attempts += 1
 
