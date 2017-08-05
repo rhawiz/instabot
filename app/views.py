@@ -1,15 +1,10 @@
-import multiprocessing
 import os
-import signal
-import time
 import uuid
 
 import logging
 from flask import request, redirect, url_for, flash, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from app.core.instagramapi import InstagramAPI as API
-from app.core.utils import execute_query
-from core.instabot import collect_followers
 from app import app, db
 from models import Content, InstaAccount, Bot
 from config import Config as cfg
@@ -129,7 +124,7 @@ def accounts():
             try:
                 db.session.add(account)
                 db.session.commit()
-            except Exception, e:
+            except Exception as e:
                 logging.error(e)
             flash("User '{}' succesfully added.".format(username), "success")
 
@@ -164,7 +159,7 @@ def stop_bot():
         try:
             bot.deactivate()
 
-        except OSError, e:
+        except OSError as e:
             logging.error(e)
 
     return redirect(url_for('active_bots'))
