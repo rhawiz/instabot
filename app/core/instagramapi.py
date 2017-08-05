@@ -19,6 +19,8 @@ from moviepy.editor import VideoFileClip
 import struct
 import imghdr
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 def get_image_size(fname):
     with open(fname, 'rb') as fhandle:
