@@ -3,7 +3,6 @@ ARG SERVICE_NAME
 ARG SERVICE_VERSION
 ENV SERVICE_NAME $SERVICE_NAME
 ENV SERVICE_VERSION $SERVICE_VERSION
-RUN apk --update add gcc musl-dev make libffi-dev openssl-dev
 RUN mkdir /app
 COPY . /app
 RUN touch /app/.env
