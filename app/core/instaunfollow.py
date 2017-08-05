@@ -29,7 +29,7 @@ class InstaUnfollow:
             pk = details.get('pk', None)
             username = details.get('username', None)
             if pk:
-                followings.append((pk, username))
+                followings.append(pk)
 
         if self.unfollow_all:
             return followings
@@ -44,7 +44,7 @@ class InstaUnfollow:
             pk = details.get("pk", None)
             username = details.get("username", None)
             if pk:
-                followers.append((pk, username))
+                followers.append(pk)
 
         followers = set(followers)
 
@@ -84,10 +84,13 @@ class InstaUnfollow:
                 self.API.login()
 
             id = users.pop(0)
-
+            print(id)
             self.API.unfollow(id)
 
-            logging.debug(self.API.last_response.content, extra={'user': self.username})
+            if self.API.last_response.status_code != 200:
+                logging.debug("Failed to unfollow user {} with status code {}".format(
+                    id,
+                    self.API.last_response.status_code))
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
