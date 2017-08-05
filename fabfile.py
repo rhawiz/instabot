@@ -8,7 +8,7 @@ class FabricException(Exception):
     pass
 
 
-REPO_URL = "ssh://git@git.geophy.com:9922/coredb/coredb-service-aggregation.git"
+REPO_URL = "https://github.com/rhawiz/instabot.git"
 
 
 def deploy():
@@ -62,6 +62,6 @@ def _run_docker_container():
     --name instabot
     --restart always
     --volume ~/instabot:/app/
-    coredb-service-aggregation
+    instabot
     """.replace("\n", " ")
     run(command)
