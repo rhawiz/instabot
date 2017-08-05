@@ -6,7 +6,7 @@ ENV SERVICE_VERSION $SERVICE_VERSION
 RUN mkdir /app
 COPY . /app
 RUN touch /app/.env
-RUN pip install -r /app/requirements-vm.txt
+RUN pip install -r /app/requirements.txt
 RUN pip install gunicorn
 WORKDIR /app
 EXPOSE 5000
