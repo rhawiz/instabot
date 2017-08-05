@@ -143,6 +143,8 @@ def bot_worker(follow, unfollow, post):
     logging.info(t1.is_alive)
     logging.info(t2.is_alive)
 
+    t1.join()
+    t2.join()
 
 def grow_followers_worker(follow_bot, unfollow_bot):
     while True:
