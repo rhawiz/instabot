@@ -112,7 +112,6 @@ def toggle_bot():
 def verify_account(username, password):
     api = API(username=username, password=password)
     api.login()
-    print api.last_response.content
     return True if api.last_response.status_code == 200 else False
 
 

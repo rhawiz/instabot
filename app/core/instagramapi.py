@@ -1,6 +1,8 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import logging
+
+import imageio
 import requests
 import random
 import json
@@ -674,7 +676,6 @@ class InstagramAPI:
             return True
         else:
             print "Request return " + str(response.status_code) + " error!"
-            print response.content
             # for debugging
             try:
                 self.last_response = response

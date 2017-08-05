@@ -16,6 +16,7 @@ from app.core.instapost import InstaPost
 from app.core.instaunfollow import InstaUnfollow
 
 
+
 class InstaAccount(db.Model):
     """
     Instagram User
@@ -75,12 +76,10 @@ class InstaAccount(db.Model):
         logging.info("Created process {}".format(p.pid))
 
         self.pid = p.pid
-        print self.pid
         self.active = True
+        db.session.commit()
 
         p.start()
-
-        db.session.commit()
 
     def follow_bot(self):
         return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.FOLLOW).first()
