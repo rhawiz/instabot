@@ -60,7 +60,6 @@ class InstaPost:
                     db.session.remove(content)
                 except Exception as e:
                     logging.exception(e)
-            logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
