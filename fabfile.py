@@ -64,4 +64,4 @@ def _run_docker_container():
     --volume ~/instabot:/app/
     instabot
     """.replace("\n", " ")
-    run(command)
+    sudo(command)
