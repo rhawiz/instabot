@@ -8,7 +8,7 @@ from instafollow import InstaFollow
 
 
 def collect_followers(follow_bot, unfollow_bot):
-    if not isinstance(follow_bot, InstaFollow.__class__) or not isinstance(unfollow_bot, InstaUnfollow.__class__):
+    if not isinstance(follow_bot, InstaFollow) or not isinstance(unfollow_bot, InstaUnfollow):
         return
 
     while True:
