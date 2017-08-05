@@ -2,9 +2,9 @@ import logging
 
 import click
 
-from app.core.instaunfollow import InstaUnfollow
+from instaunfollow import InstaUnfollow
 
-from app.core.instafollow import InstaFollow
+from instafollow import InstaFollow
 
 
 def collect_followers(follow_bot, unfollow_bot):
