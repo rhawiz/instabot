@@ -11,9 +11,6 @@ import logging
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
 from app import app, db, bot_config
-from app.core.instafollow import InstaFollow
-from app.core.instapost import InstaPost
-from app.core.instaunfollow import InstaUnfollow
 
 
 class InstaAccount(db.Model):
@@ -49,6 +46,10 @@ class InstaAccount(db.Model):
         db.session.commit()
 
     def activate(self):
+        from app.core.instafollow import InstaFollow
+        from app.core.instapost import InstaPost
+        from app.core.instaunfollow import InstaUnfollow
+
         base_config = {
             'username': self.username,
             'password': self.password
@@ -212,6 +213,10 @@ class Bot(db.Model):
         db.session.commit()
 
     def create(self):
+        from app.core.instafollow import InstaFollow
+        from app.core.instapost import InstaPost
+        from app.core.instaunfollow import InstaUnfollow
+
         user = self.get_user()
         if self.bot == BotType.FOLLOW:
             return InstaFollow(

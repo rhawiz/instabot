@@ -1,7 +1,6 @@
 import logging
 from random import uniform
 from time import sleep
-from ..models import Content, InstaAccount
 from app import db
 from instagramapi import InstagramAPI
 
@@ -17,6 +16,7 @@ class InstaPost:
         self.API = InstagramAPI(self.username, self.password)
 
     def _get_content(self):
+        from app.models import Content, InstaAccount
 
         insta_account = InstaAccount.query.filter_by(username=self.username).first()
         return Content.query.filter_by(insta_account_id=insta_account.id, verified=True).first()
@@ -40,7 +40,6 @@ class InstaPost:
 
         if not self._login():
             return False
-
 
         progress = 0
         while True:
