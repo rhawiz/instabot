@@ -1,7 +1,7 @@
 import logging
 from random import uniform
 from time import sleep
-from app.models import Content, InstaAccount
+from ..models import Content, InstaAccount
 from app import db
 from instagramapi import InstagramAPI
 
