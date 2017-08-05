@@ -37,6 +37,7 @@ class InstaAccount(db.Model):
     def deactivate(self):
         try:
             os.kill(int(self.pid), signal.SIGTERM)
+            logging.info("Killing process {}".format(self.pid))
         except Exception as e:
             logging.error("Could not kill process", e)
         finally:
@@ -145,6 +146,7 @@ def bot_worker(follow, unfollow, post):
 
     t1.join()
     t2.join()
+
 
 def grow_followers_worker(follow_bot, unfollow_bot):
     while True:
