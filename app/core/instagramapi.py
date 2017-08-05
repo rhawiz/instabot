@@ -675,7 +675,7 @@ class InstagramAPI:
             self.last_json = json.loads(response.text)
             return True
         else:
-            print "Request return " + str(response.status_code) + " error!"
+            logging.info("Request return {} error:\n{}".format(response.status_code, response.content))
             # for debugging
             try:
                 self.last_response = response
