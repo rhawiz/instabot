@@ -1,7 +1,8 @@
 import logging
 from random import uniform
 from time import sleep
-
+from app.models import Content, InstaAccount
+from app import db
 from instagramapi import InstagramAPI
 
 
@@ -16,10 +17,9 @@ class InstaPost:
         self.API = InstagramAPI(self.username, self.password)
 
     def _get_content(self):
-        from app.models import Content, InstaAccount
 
         insta_account = InstaAccount.query.filter_by(username=self.username).first()
-        return Content.query.filter_by(insta_account_id=insta_account.id).first()
+        return Content.query.filter_by(insta_account_id=insta_account.id, verified=True).first()
 
     def _login(self):
         attempts = 0
@@ -36,10 +36,11 @@ class InstaPost:
         return False
 
     def start(self):
+        logging.info("Post bot started...")
 
         if not self._login():
             return False
-        logging.info("Post bot started...", extra={'user': self.username})
+
 
         progress = 0
         while True:
@@ -53,6 +54,13 @@ class InstaPost:
             elif content.type == 'video':
                 self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
 
+            if self.API.last_response.status_code == 200:
+                logging.info("Successfully posted content {}".format(content.urls))
+                try:
+                    content.delete()
+                    db.session.remove(content)
+                except Exception as e:
+                    logging.exception(e)
             logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):

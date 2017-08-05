@@ -16,7 +16,6 @@ from app.core.instapost import InstaPost
 from app.core.instaunfollow import InstaUnfollow
 
 
-
 class InstaAccount(db.Model):
     """
     Instagram User
@@ -123,20 +122,25 @@ class Content(db.Model):
     def get_user(self):
         return InstaAccount.query.filter_by(id=self.insta_account_id).first()
 
+    def delete(self):
+        try:
+            os.remove(self.path)
+        except Exception as e:
+            logging.exception(e)
+
     def __repr__(self):
         return '<User %r> <URL %r>' % (self.insta_account_id, self.url)
 
 
 def bot_worker(follow, unfollow, post):
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
-    # t2 = threading.Thread(target=instapost_worker, args=(post,))
-    print t1, t1.is_alive
+    t2 = threading.Thread(target=instapost_worker, args=(post,))
     # print t2, t2.is_alive
+    t2.start()
     t1.start()
-    # t2.start()
 
-    t1.join()
-    # t2.join()
+    logging.info(t1.is_alive)
+    logging.info(t2.is_alive)
 
 
 def grow_followers_worker(follow_bot, unfollow_bot):
