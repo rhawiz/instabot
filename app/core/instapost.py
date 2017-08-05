@@ -38,6 +38,7 @@ class InstaPost:
         logging.info("Post bot started...")
 
         if not self._login():
+            logging.info("Failed to log into post bot")
             return False
 
         progress = 0
@@ -47,6 +48,7 @@ class InstaPost:
                 self.API.login()
 
             content = self._get_content()
+
             if content.type == 'photo':
                 self.API.upload_photo(photo=content.path, caption=content.caption)
             elif content.type == 'video':

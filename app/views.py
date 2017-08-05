@@ -94,8 +94,11 @@ def toggle_bot():
         account_id = request.form.get('account_id')
         account = InstaAccount.query.filter_by(id=account_id).first()
         if account.active:
+            logging.info("Deactivating bot")
             account.deactivate()
         else:
+            logging.info("Activating bot")
+
             account.activate()
 
         return redirect(url_for('dashboard'))
