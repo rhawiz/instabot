@@ -6,7 +6,7 @@ from instagramapi import InstagramAPI
 
 
 class InstaFollow:
-    def __init__(self, username, password, similar_users, action_interval=8.0, rate=75, interval=5400):
+    def __init__(self, username, password, similar_users, API=None, action_interval=8.0, rate=75, interval=5400):
         self.username = username
         self.password = password
 
@@ -18,7 +18,7 @@ class InstaFollow:
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
-        self.API = InstagramAPI(self.username, self.password)
+        self.API = InstagramAPI(self.username, self.password) if API is None else API
 
     def _get_user_ids(self, save_to=None):
 
@@ -80,12 +80,16 @@ class InstaFollow:
 
     def start(self):
 
-        if not self._login():
-            return False
+        if not self.API.is_logged_in:
+            if not self._login():
+                return False
 
         logging.info("Follow bot started...", extra={'user': self.username})
-        users = self._get_user_ids()
+        users = []
+        while len(users) < 7000:
+            users += self._get_user_ids()
         progress = 0
+
         while users:
             progress += 1
             if not self.API.is_logged_in:
@@ -98,6 +102,9 @@ class InstaFollow:
             logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):
+                followings = len(self.API.get_total_self_followings())
+                if followings > 7000:
+                    break
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
 
             # Sleep n seconds +/ 10% to induce randomness between each action

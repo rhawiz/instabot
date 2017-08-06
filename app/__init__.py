@@ -32,13 +32,13 @@ bot_config = {
         'rate': 75
     },
     'unfollow': {
-        'action_interval': 8.0,
+        'action_interval': 4.0,
         'interval': 5400,
         'rate': 120
     },
     'post': {
         'action_interval': 8.0,
-        'interval': 1.0,
+        'interval': 86400,
         'rate': 1
     }
 }

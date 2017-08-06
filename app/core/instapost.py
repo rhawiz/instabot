@@ -6,14 +6,14 @@ from instagramapi import InstagramAPI
 
 
 class InstaPost:
-    def __init__(self, username, password, action_interval=8.0, rate=75, interval=5400):
+    def __init__(self, username, password, API=None, action_interval=8.0, rate=1, interval=86400):
         self.username = username
         self.password = password
 
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
-        self.API = InstagramAPI(self.username, self.password)
+        self.API = InstagramAPI(self.username, self.password) if API is None else API
 
     def _get_content(self):
         from app.models import Content, InstaAccount
@@ -37,9 +37,11 @@ class InstaPost:
     def start(self):
         logging.info("Post bot started...")
 
-        if not self._login():
-            logging.info("Failed to log into post bot")
-            return False
+        if not self.API.is_logged_in:
+
+            if not self._login():
+                logging.info("Failed to log into post bot")
+                return False
 
         progress = 0
         while True:
@@ -49,18 +51,26 @@ class InstaPost:
 
             content = self._get_content()
 
-            if content.type == 'photo':
-                self.API.upload_photo(photo=content.path, caption=content.caption)
-            elif content.type == 'video':
-                self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
+            try:
+                if content.type == 'photo':
+                    self.API.upload_photo(photo=content.path, caption=content.caption)
+                elif content.type == 'video':
+                    self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
+            except (IOError, Exception) as e:
+                logging.exception(e)
+
+            print self.API.last_response.status_code
 
             if self.API.last_response.status_code == 200:
-                logging.info("Successfully posted content {}".format(content.urls))
-                try:
-                    content.delete()
-                    db.session.remove(content)
-                except Exception as e:
-                    logging.exception(e)
+                logging.info("Successfully posted content {}".format(content.url))
+
+            try:
+                content.delete_content()
+            except Exception as e:
+                print e.message
+            finally:
+                db.session.delete(content)
+                db.session.commit()
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))

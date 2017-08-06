@@ -9,14 +9,14 @@ from instagramapi import InstagramAPI
 
 
 class InstaUnfollow:
-    def __init__(self, username, password, action_interval=8.0, rate=120, interval=5400, unfollow_all=True):
+    def __init__(self, username, password, API=None, action_interval=8.0, rate=120, interval=5400, unfollow_all=True):
         self.username = username
         self.password = password
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
         self.unfollow_all = unfollow_all
-        self.API = InstagramAPI(self.username, self.password)
+        self.API = InstagramAPI(self.username, self.password) if API is None else API
 
     def _get_user_ids(self):
         logging.info('Collecting users to unfollow...', extra={'user': self.username})
@@ -24,12 +24,7 @@ class InstaUnfollow:
         # Get people followings
         following_details = self.API.get_total_self_followings()
 
-        followings = []
-        for details in following_details:
-            pk = details.get('pk', None)
-            username = details.get('username', None)
-            if pk:
-                followings.append(pk)
+        followings = [d.get('pk') for d in following_details]
 
         if self.unfollow_all:
             return followings
@@ -39,12 +34,7 @@ class InstaUnfollow:
         # Get all followers
         followers_details = self.API.get_total_followers(username_id=self.API.username_id)
 
-        followers = []
-        for details in followers_details:
-            pk = details.get("pk", None)
-            username = details.get("username", None)
-            if pk:
-                followers.append(pk)
+        followers = [d.get('pk') for d in followers_details]
 
         followers = set(followers)
 
@@ -61,7 +51,6 @@ class InstaUnfollow:
                     return True
             except Exception as e:
                 logging.error("Failed to login", e)
-            print self.API.last_response.content
             sleep(6)
             attempts += 1
 
@@ -69,8 +58,9 @@ class InstaUnfollow:
 
     def start(self):
 
-        if not self._login():
-            return False
+        if not self.API.is_logged_in:
+            if not self._login():
+                return False
 
         logging.info("Unfollow bot started...", extra={'user': self.username})
 

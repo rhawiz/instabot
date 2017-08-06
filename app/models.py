@@ -39,7 +39,7 @@ class InstaAccount(db.Model):
             os.kill(int(self.pid), signal.SIGTERM)
             logging.info("Killing process {}".format(self.pid))
         except Exception as e:
-            logging.error("Could not kill process", e)
+            logging.exception(e)
         finally:
             self.pid = None
             self.active = False
@@ -50,12 +50,13 @@ class InstaAccount(db.Model):
         from app.core.instafollow import InstaFollow
         from app.core.instapost import InstaPost
         from app.core.instaunfollow import InstaUnfollow
-
+        from core.instagramapi import InstagramAPI
+        API = InstagramAPI(self.username, self.password)
         base_config = {
             'username': self.username,
-            'password': self.password
+            'password': self.password,
+            'API': API
         }
-
         follow_config = bot_config.get('follow')
         follow_config.update(base_config)
         follow_config['similar_users'] = self.similar_users
@@ -69,27 +70,20 @@ class InstaAccount(db.Model):
         follow_bot = InstaFollow(**follow_config)
         unfollow_bot = InstaUnfollow(**unfollow_config)
         post_bot = InstaPost(**post_config)
+
         p = multiprocessing.Process(
             target=bot_worker,
             args=(follow_bot, unfollow_bot, post_bot,)
         )
 
-        logging.info("Created process {}".format(p.pid))
-
-        self.pid = p.pid
         self.active = True
-        db.session.commit()
 
         p.start()
 
-    def follow_bot(self):
-        return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.FOLLOW).first()
+        self.pid = p.pid
+        logging.info("Created process {}".format(p.pid))
 
-    def unfollow_bot(self):
-        return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.UNFOLLOW).first()
-
-    def post_bot(self):
-        return Bot.query.filter_by(insta_account_id=self.id, bot=BotType.POST).first()
+        db.session.commit()
 
     def __repr__(self):
         return '<Username %r>' % self.username
@@ -124,7 +118,7 @@ class Content(db.Model):
     def get_user(self):
         return InstaAccount.query.filter_by(id=self.insta_account_id).first()
 
-    def delete(self):
+    def delete_content(self):
         try:
             os.remove(self.path)
         except Exception as e:
@@ -135,6 +129,8 @@ class Content(db.Model):
 
 
 def bot_worker(follow, unfollow, post):
+    follow.API.login()
+
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
     t2 = threading.Thread(target=instapost_worker, args=(post,))
     # print t2, t2.is_alive
@@ -149,13 +145,24 @@ def bot_worker(follow, unfollow, post):
 
 
 def grow_followers_worker(follow_bot, unfollow_bot):
+    followings = len(unfollow_bot.API.get_total_self_followings())
+
+    if followings < 7000:
+        bot1 = follow_bot
+        bot2 = unfollow_bot
+    else:
+        bot1 = unfollow_bot
+        bot2 = follow_bot
+
     while True:
         try:
-            unfollow_bot.start()
+            with app.app_context():
+                bot1.start()
         except Exception, e:
             logging.critical("Unfollow failed to start", e)
         try:
-            follow_bot.start()
+            with app.app_context():
+                bot2.start()
         except Exception, e:
             logging.critical("Follow failed to start", e)
 
@@ -163,7 +170,8 @@ def grow_followers_worker(follow_bot, unfollow_bot):
 def instapost_worker(bot):
     while True:
         try:
-            bot.start()
+            with app.app_context():
+                bot.start()
         except Exception, e:
             logging.critical(e)
 
