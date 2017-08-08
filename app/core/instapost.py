@@ -40,7 +40,6 @@ class InstaPost:
         if not self.API.is_logged_in:
 
             if not self._login():
-                logging.info("Failed to log into post bot")
                 return False
 
         progress = 0
@@ -64,12 +63,13 @@ class InstaPost:
                 try:
                     content.delete_content()
                 except Exception as e:
-                    print e.message
+                    logging.exception(e)
                 finally:
                     db.session.delete(content)
                     db.session.commit()
 
             if not (progress % self.rate):
+                progress = 0
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
 
             # Sleep n seconds +/ 10% to induce randomness between each action

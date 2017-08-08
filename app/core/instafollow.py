@@ -110,6 +110,7 @@ class InstaFollow:
             logging.debug(self.API.last_response.content, extra={'user': self.username})
 
             if not (progress % self.rate):
+                progress = 0
                 followings = len(self.API.get_total_self_followings())
                 if followings > 7000:
                     break
