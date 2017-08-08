@@ -89,7 +89,7 @@ class InstaFollow:
         while len(users) < 7000:
             users += self._get_user_ids()
         progress = 0
-
+        too_many_request_errors = 0
         while users:
             progress += 1
             if not self.API.is_logged_in:
@@ -98,6 +98,14 @@ class InstaFollow:
             id = users.pop(0)
 
             self.API.follow(id)
+
+            if self.API.last_response.status_code == 429:
+                users.append(id)
+                too_many_request_errors += 1
+
+            if too_many_request_errors == 10:
+                sleep(120)
+                too_many_request_errors = 0
 
             logging.debug(self.API.last_response.content, extra={'user': self.username})
 

@@ -1,11 +1,13 @@
-import urllib
+
 from random import randint
 
 import re
+from time import sleep
+
 import requests
 from bs4 import BeautifulSoup
 
-from instabot.utils import generate_request_header
+from app.core.utils import generate_request_header
 
 
 class ContentCollector:
@@ -66,4 +68,5 @@ class ContentCollector:
 if __name__ == '__main__':
     collector = ContentCollector()
     while True:
-        collector._get_reddit_content("earthporn", "month")
+        collector._get_reddit_content("funny", "month")
+        sleep(10)

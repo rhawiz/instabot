@@ -51,26 +51,23 @@ class InstaPost:
 
             content = self._get_content()
 
-            try:
-                if content.type == 'photo':
-                    self.API.upload_photo(photo=content.path, caption=content.caption)
-                elif content.type == 'video':
-                    self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
-            except (IOError, Exception) as e:
-                logging.exception(e)
 
-            print self.API.last_response.status_code
+            if content is not None:
+                try:
+                    if content.type == 'photo':
+                        self.API.upload_photo(photo=content.path, caption=content.caption)
+                    elif content.type == 'video':
+                        self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
+                except (IOError, Exception) as e:
+                    logging.exception(e)
 
-            if self.API.last_response.status_code == 200:
-                logging.info("Successfully posted content {}".format(content.url))
-
-            try:
-                content.delete_content()
-            except Exception as e:
-                print e.message
-            finally:
-                db.session.delete(content)
-                db.session.commit()
+                try:
+                    content.delete_content()
+                except Exception as e:
+                    print e.message
+                finally:
+                    db.session.delete(content)
+                    db.session.commit()
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
