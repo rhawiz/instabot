@@ -50,7 +50,6 @@ class InstaPost:
 
             content = self._get_content()
 
-
             if content is not None:
                 try:
                     if content.type == 'photo':
@@ -70,6 +69,7 @@ class InstaPost:
 
             if not (progress % self.rate):
                 progress = 0
+                logging.debug("Instapost: sleeping {}mins".format(self.interval / 60))
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
 
             # Sleep n seconds +/ 10% to induce randomness between each action
