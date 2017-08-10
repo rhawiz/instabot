@@ -38,7 +38,6 @@ class InstaPost:
         logging.info("Post bot started...")
 
         if not self.API.is_logged_in:
-
             if not self._login():
                 return False
 

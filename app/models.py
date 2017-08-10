@@ -72,6 +72,11 @@ class InstaAccount(db.Model):
         unfollow_bot = InstaUnfollow(**unfollow_config)
         post_bot = InstaPost(**post_config)
 
+        while API.is_logged_in is not True:
+            API.login()
+            logging.exception("Failed to log in...retrying in 3 seconds.")
+            sleep(3)
+
         p = multiprocessing.Process(
             target=bot_worker,
             args=(follow_bot, unfollow_bot, post_bot,)
@@ -130,12 +135,6 @@ class Content(db.Model):
 
 
 def bot_worker(follow, unfollow, post):
-
-    while follow.API.is_logged_in is not True:
-        follow.API.login()
-        logging.exception("Failed to log in...retrying in 3 seconds.")
-        sleep(3)
-
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
     t2 = threading.Thread(target=instapost_worker, args=(post,))
     # print t2, t2.is_alive
