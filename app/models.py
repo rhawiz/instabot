@@ -1,6 +1,7 @@
 import os
 import threading
 from datetime import datetime
+from time import sleep
 
 import enum
 import signal
@@ -145,14 +146,21 @@ def bot_worker(follow, unfollow, post):
 
 
 def grow_followers_worker(follow_bot, unfollow_bot):
-    followings = len(unfollow_bot.API.get_total_self_followings())
+    attempts = 0
+    followings = 0
+    while attempts < 10:
+        try:
+            followings = len(unfollow_bot.API.get_total_self_followings())
+        except Exception:
+            attempts += 1
+            sleep(3)
 
-    if followings < 7000:
-        bot1 = follow_bot
-        bot2 = unfollow_bot
-    else:
+    if followings > 7000:
         bot1 = unfollow_bot
         bot2 = follow_bot
+    else:
+        bot1 = follow_bot
+        bot2 = unfollow_bot
 
     while True:
         try:
