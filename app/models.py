@@ -130,7 +130,9 @@ class Content(db.Model):
 
 
 def bot_worker(follow, unfollow, post):
-    while follow.API.login() is not False:
+
+    while follow.API.is_logged_in is not True:
+        follow.API.login()
         logging.exception("Failed to log in...retrying in 3 seconds.")
         sleep(3)
 
