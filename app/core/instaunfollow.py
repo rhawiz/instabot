@@ -67,20 +67,23 @@ class InstaUnfollow:
         users = self._get_user_ids()
 
         progress = 0
-
+        too_many_request_errors = 0
         while users:
             progress += 1
             if not self.API.is_logged_in:
                 self.API.login()
 
             id = users.pop(0)
-            print(id)
+
             self.API.unfollow(id)
 
-            if self.API.last_response.status_code != 200:
-                logging.debug("Failed to unfollow user {} with status code {}".format(
-                    id,
-                    self.API.last_response.status_code))
+            if self.API.last_response.status_code == 429:
+                users.append(id)
+                too_many_request_errors += 1
+
+            if too_many_request_errors == 10:
+                sleep(randint(60, 100))
+                too_many_request_errors = 0
 
             if not (progress % self.rate):
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))

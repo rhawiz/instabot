@@ -104,7 +104,7 @@ class InstaFollow:
                 too_many_request_errors += 1
 
             if too_many_request_errors == 10:
-                sleep(120)
+                sleep(randint(60, 100))
                 too_many_request_errors = 0
 
             logging.debug(self.API.last_response.content, extra={'user': self.username})
