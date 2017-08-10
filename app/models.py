@@ -130,7 +130,7 @@ class Content(db.Model):
 
 
 def bot_worker(follow, unfollow, post):
-    while follow.API.login() is False:
+    while follow.API.login() is not False:
         logging.exception("Failed to log in...retrying in 3 seconds.")
         sleep(3)
 
@@ -151,7 +151,6 @@ def grow_followers_worker(follow_bot, unfollow_bot):
     try:
         followings = len(unfollow_bot.API.get_total_self_followings())
     except Exception as e:
-        print(e)
         followings = 0
     logging.info(followings)
     if followings > 7000:
