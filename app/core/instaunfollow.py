@@ -62,7 +62,7 @@ class InstaUnfollow:
             if not self._login():
                 return False
 
-        logging.info("Unfollow bot started...", extra={'user': self.username})
+        logging.info("Unfollow bot started for user {}...".format(self.API.username))
 
         users = self._get_user_ids()
 
