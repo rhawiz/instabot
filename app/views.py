@@ -1,7 +1,7 @@
 import os
 import uuid
 
-import logging
+from app import logger
 from flask import request, redirect, url_for, flash, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from app.core.instagramapi import InstagramAPI as API
@@ -93,11 +93,12 @@ def toggle_bot():
     if request.method == 'POST':
         account_id = request.form.get('account_id')
         account = InstaAccount.query.filter_by(id=account_id).first()
+        logger.info("Toggling account {}...".format(account.username))
         if account.active:
-            logging.info("Deactivating bot")
+            logger.info("Deactivating bot")
             account.deactivate()
         else:
-            logging.info("Activating bot")
+            logger.info("Activating bot")
 
             account.activate()
 
@@ -128,7 +129,7 @@ def accounts():
                 db.session.add(account)
                 db.session.commit()
             except Exception as e:
-                logging.error(e)
+                logger.error(e)
             flash("User '{}' succesfully added.".format(username), "success")
 
         else:
@@ -155,6 +156,8 @@ def delete_account():
 @app.route('/stop', methods=['POST'])
 def stop_bot():
     if request.method == 'POST':
+        logger.info("Attempting to kill bot...")
+
         pid = request.form.get('pid')
 
         bot = Bot.query.filter_by(unix_pid=pid).first()
@@ -163,7 +166,7 @@ def stop_bot():
             bot.deactivate()
 
         except OSError as e:
-            logging.error(e)
+            logger.error(e)
 
     return redirect(url_for('active_bots'))
 

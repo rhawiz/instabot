@@ -132,7 +132,7 @@ class Content(db.Model):
 def bot_worker(follow, unfollow, post):
     while follow.API.is_logged_in is not True:
         follow.API.login()
-        logger.info("Failed to log in to {}...retrying in 3 seconds.".format(follow.API.username))
+        logger.info("Failed to log in to {}...retrying in 3 seconds.".format(follow.username))
         sleep(3)
 
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
