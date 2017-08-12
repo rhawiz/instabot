@@ -1,3 +1,4 @@
+import json
 import logging
 from random import randint, uniform
 from time import sleep
@@ -89,7 +90,7 @@ class InstaFollow:
         while len(users) < 7000:
             users += self._get_user_ids()
         progress = 0
-        too_many_request_errors = 0
+        bad_requests = 0
         while users:
             progress += 1
             if not self.API.is_logged_in:
@@ -99,16 +100,18 @@ class InstaFollow:
 
             self.API.follow(id)
 
-            if self.API.last_response.status_code == 429:
+            if self.API.last_response.status_code in (429, 400):
                 users.append(id)
-                too_many_request_errors += 1
+                bad_requests += 1
 
-            if too_many_request_errors == 10:
+            if bad_requests == 10:
                 sleep(randint(60, 100))
-                too_many_request_errors = 0
+                bad_requests = 0
 
-            logging.debug(self.API.last_response.content, extra={'user': self.username})
-
+            try:
+                logging.debug(json.dumps(self.API.last_response.content, indent=4))
+            except Exception as e:
+                pass
             if not (progress % self.rate):
                 progress = 0
                 followings = len(self.API.get_total_self_followings())

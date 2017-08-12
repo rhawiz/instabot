@@ -8,7 +8,7 @@ import signal
 
 import multiprocessing
 
-import logging
+from app import logger
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
 from app import app, db, bot_config
@@ -38,9 +38,9 @@ class InstaAccount(db.Model):
     def deactivate(self):
         try:
             os.kill(int(self.pid), signal.SIGTERM)
-            logging.info("Killing process {}".format(self.pid))
+            logger.info("Killing process {}".format(self.pid))
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
         finally:
             self.pid = None
             self.active = False
@@ -82,7 +82,7 @@ class InstaAccount(db.Model):
         p.start()
 
         self.pid = p.pid
-        logging.info("Created process {}".format(p.pid))
+        logger.info("Created process {}".format(p.pid))
 
         db.session.commit()
 
@@ -123,7 +123,7 @@ class Content(db.Model):
         try:
             os.remove(self.path)
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
 
     def __repr__(self):
         return '<User %r> <URL %r>' % (self.insta_account_id, self.url)
@@ -132,7 +132,7 @@ class Content(db.Model):
 def bot_worker(follow, unfollow, post):
     while follow.API.is_logged_in is not True:
         follow.API.login()
-        logging.exception("Failed to log in...retrying in 3 seconds.")
+        logger.info("Failed to log in to {}...retrying in 3 seconds.".format(follow.API.username))
         sleep(3)
 
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
@@ -141,8 +141,8 @@ def bot_worker(follow, unfollow, post):
     t2.start()
     t1.start()
 
-    logging.info(t1.is_alive)
-    logging.info(t2.is_alive)
+    logger.info(t1.is_alive)
+    logger.info(t2.is_alive)
 
     t1.join()
     t2.join()
@@ -153,7 +153,7 @@ def grow_followers_worker(follow_bot, unfollow_bot):
         followings = len(unfollow_bot.API.get_total_self_followings())
     except Exception as e:
         followings = 0
-    logging.info(followings)
+    logger.info(followings)
     if followings > 7000:
         bot1 = unfollow_bot
         bot2 = follow_bot
@@ -166,12 +166,12 @@ def grow_followers_worker(follow_bot, unfollow_bot):
             with app.app_context():
                 bot1.start()
         except Exception, e:
-            logging.critical("Unfollow failed to start", e)
+            logger.critical("Unfollow failed to start", e)
         try:
             with app.app_context():
                 bot2.start()
         except Exception, e:
-            logging.critical("Follow failed to start", e)
+            logger.critical("Follow failed to start", e)
 
 
 def instapost_worker(bot):
@@ -180,7 +180,7 @@ def instapost_worker(bot):
             with app.app_context():
                 bot.start()
         except Exception, e:
-            logging.critical(e)
+            logger.critical(e)
 
 
 class BotType(enum.Enum):
@@ -219,7 +219,7 @@ class Bot(db.Model):
         try:
             os.kill(int(self.unix_pid), signal.SIGTERM)
         except OSError as e:
-            logging.error("Could not kill process", e)
+            logger.error("Could not kill process", e)
         finally:
             self.unix_pid = None
             self.active = False

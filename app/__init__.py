@@ -22,14 +22,15 @@ logger = logging.getLogger(__name__)
 syslog = logging.StreamHandler()
 formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)] %(message)s')
 syslog.setFormatter(formatter)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 logger.addHandler(syslog)
+
 
 bot_config = {
     'follow': {
         'action_interval': 4.0,
-        'interval': 4000,
-        'rate': 75
+        'interval': 4400,
+        'rate': 60
     },
     'unfollow': {
         'action_interval': 4.0,

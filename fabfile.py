@@ -58,7 +58,6 @@ def _build_docker_image(source_folder):
 
 def _run_docker_container():
     command = """
-    --log-opt max-size=50m
     docker run -d -p 80:80
     --name instabot
     --restart always
