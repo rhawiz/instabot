@@ -95,10 +95,10 @@ def toggle_bot():
         account = InstaAccount.query.filter_by(id=account_id).first()
         logger.info("Toggling account {}...".format(account.username))
         if account.active:
-            logger.info("Deactivating bot")
+            logger.info("Deactivating bot for {}...".format(account.username))
             account.deactivate()
         else:
-            logger.info("Activating bot")
+            logger.info("Activating bot for {}...".format(account.username))
 
             account.activate()
 

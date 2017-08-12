@@ -22,7 +22,7 @@ class InstaFollow:
 
     def _get_user_ids(self, save_to=None):
 
-        logger.info('Collecting users to follow...', extra={'user': self.username})
+        logger.info('Collecting users to follow...')
 
         # Randomly select root account to search for users
         account = self.similar_users[randint(0, len(self.similar_users) - 1)]
@@ -51,7 +51,7 @@ class InstaFollow:
             try:
                 users = self.API.last_json.get('users')
             except ChunkedEncodingError, e:
-                logger.error("Failed to retrieve user list", e, extra={'user': self.username})
+                logger.error("Failed to retrieve user list", e)
                 users = []
 
             for user in users:
@@ -60,7 +60,7 @@ class InstaFollow:
 
         user_ids = list(set(user_ids))
 
-        logger.info("Found {} new users...".format(len(user_ids)), extra={'user': self.username})
+        logger.info("Found {} new users...".format(len(user_ids)))
 
         return user_ids
 
@@ -71,7 +71,7 @@ class InstaFollow:
                 if self.API.login():
                     return True
             except Exception as e:
-                logger.error("Failed to login", e)
+                logger.error("Failed to login to {}...".format(self.API.username), e)
 
             sleep(6)
             attempts += 1
@@ -84,7 +84,7 @@ class InstaFollow:
             if not self._login():
                 return False
 
-        logger.info("Follow bot started...", extra={'user': self.username})
+        logger.info("Follow bot started for account {}...".format(self.API.username))
         users = []
         while len(users) < 7000:
             users += self._get_user_ids()
@@ -107,6 +107,7 @@ class InstaFollow:
                 sleep(randint(60, 100))
                 bad_requests = 0
 
+            logger.debug(self.API.username)
             logger.debug(self.API.last_response.content)
 
             if not (progress % self.rate):

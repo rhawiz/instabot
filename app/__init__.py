@@ -20,7 +20,7 @@ app.jinja_loader = my_loader
 
 logger = logging.getLogger(__name__)
 syslog = logging.StreamHandler()
-formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)] %(message)s')
+formatter = logging.Formatter('[%(asctime)s][%(levelname)s] %(message)s')
 syslog.setFormatter(formatter)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(syslog)
