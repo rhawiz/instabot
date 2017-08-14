@@ -37,7 +37,7 @@ class InstaAccount(db.Model):
 
     def deactivate(self):
         try:
-            os.kill(int(self.pid), signal.SIGTERM)
+            os.killpg(int(self.pid), signal.SIGTERM)
             logger.info("Killing process {}".format(self.pid))
         except Exception as e:
             logger.exception(e)
