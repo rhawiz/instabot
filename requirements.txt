@@ -9,4 +9,4 @@ beautifulsoup4==4.4.1
 sqlalchemy-migrate
 flup
 enum34==1.1.6
-fabric
+psutil
