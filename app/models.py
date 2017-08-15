@@ -8,6 +8,8 @@ import signal
 
 import multiprocessing
 
+import psutil
+
 from app import logger
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
 
@@ -37,8 +39,12 @@ class InstaAccount(db.Model):
 
     def deactivate(self):
         try:
-            os.killpg(int(self.pid), signal.SIGTERM)
+            #os.killpg(int(self.pid), signal.SIGTERM)
             logger.info("Killing process {}".format(self.pid))
+            parent = psutil.Process(int(self.pid))
+            for child in parent.children(recursive=True):  # or parent.children() for recursive=False
+                child.kill()
+            parent.kill()
         except Exception as e:
             logger.exception(e)
         finally:
