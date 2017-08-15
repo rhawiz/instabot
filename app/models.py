@@ -43,6 +43,7 @@ class InstaAccount(db.Model):
             logger.info("Killing process {}".format(self.pid))
             parent = psutil.Process(int(self.pid))
             for child in parent.children(recursive=True):  # or parent.children() for recursive=False
+                logger.info("Killing child process {}".format(child.pid))
                 child.kill()
             parent.kill()
         except Exception as e:
