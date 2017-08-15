@@ -147,8 +147,7 @@ def delete_account():
 @app.route('/delete_content', methods=['POST'])
 def delete_content():
     if request.method == 'POST':
-        id = request.form.get("id")
-
+        id = request.form.get("content_id")
         content = Content.query.filter_by(id=id).first()
         if content:
             db.session.delete(content)

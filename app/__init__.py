@@ -24,8 +24,8 @@ syslog = logging.StreamHandler()
 formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
 syslog.setFormatter(formatter)
 logger.setLevel(logging.INFO)
-if not logger.handlers:
-    logger.addHandler(syslog)
+#if not logger.handlers:
+logger.addHandler(syslog)
 
 bot_config = {
     'follow': {
@@ -39,9 +39,9 @@ bot_config = {
         'rate': 120
     },
     'post': {
-        'action_interval': 8.0,
+        'action_interval': 1.0,
         'interval': 28800,
-        'rate': 1
+        'rate': 4
     }
 }
 
