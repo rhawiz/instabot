@@ -19,7 +19,7 @@ my_loader = jinja2.ChoiceLoader([
 app.jinja_loader = my_loader
 
 logger = logging.getLogger(__name__)
-logging.getLogger("requests").setLevel(logging.DEBUG)
+# logging.getLogger("requests").setLevel(logging.DEBUG)
 syslog = logging.StreamHandler()
 formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
 syslog.setFormatter(formatter)
