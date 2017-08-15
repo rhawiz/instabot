@@ -8,13 +8,15 @@ import signal
 
 import multiprocessing
 
+import logging
 import psutil
 
 from app import logger
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 
 from app import app, db, bot_config
 
+logger = logging.LoggerAdapter(logger, {'user': "", 'bot': 'instaccount'})
 
 class InstaAccount(db.Model):
     """
@@ -35,15 +37,16 @@ class InstaAccount(db.Model):
         self.similar_users = similar_users
         self.created_at = created_at
         self.pid = pid
+
         self.active = active
 
     def deactivate(self):
         try:
-            #os.killpg(int(self.pid), signal.SIGTERM)
-            logger.info("Killing process {}".format(self.pid))
+            # os.killpg(int(self.pid), signal.SIGTERM)
+            logger.info("killing process {}...".format(self.pid))
             parent = psutil.Process(int(self.pid))
             for child in parent.children(recursive=True):  # or parent.children() for recursive=False
-                logger.info("Killing child process {}".format(child.pid))
+                logger.info("\tkilling child process {}...".format(child.pid))
                 child.kill()
             parent.kill()
         except Exception as e:
@@ -89,7 +92,7 @@ class InstaAccount(db.Model):
         p.start()
 
         self.pid = p.pid
-        logger.info("Created process {}".format(p.pid))
+        logger.info("created process {}".format(p.pid))
 
         db.session.commit()
 
@@ -139,7 +142,7 @@ class Content(db.Model):
 def bot_worker(follow, unfollow, post):
     while follow.API.is_logged_in is not True:
         follow.API.login()
-        logger.info("Failed to log in to {}...retrying in 3 seconds.".format(follow.username))
+        logger.info("failed to log in...retrying in 3 seconds.".format(follow.username))
         sleep(3)
 
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
@@ -147,9 +150,6 @@ def bot_worker(follow, unfollow, post):
     # print t2, t2.is_alive
     t2.start()
     t1.start()
-
-    logger.info(t1.is_alive)
-    logger.info(t2.is_alive)
 
     t1.join()
     t2.join()
@@ -160,7 +160,7 @@ def grow_followers_worker(follow_bot, unfollow_bot):
         followings = len(unfollow_bot.API.get_total_self_followings())
     except Exception as e:
         followings = 0
-    logger.info(followings)
+
     if followings > 7000:
         bot1 = unfollow_bot
         bot2 = follow_bot
@@ -187,113 +187,6 @@ def instapost_worker(bot):
             with app.app_context():
                 bot.start()
         except Exception, e:
-            logger.critical(e)
+            logging.critical(e)
 
 
-class BotType(enum.Enum):
-    FOLLOW = "follow"
-    UNFOLLOW = "unfollow"
-    POST = "post"
-
-
-class Bot(db.Model):
-    """
-    Bots Model to store active bots
-    """
-    __table_args__ = {'extend_existing': True}
-    id = Column(Integer, primary_key=True)
-    insta_account_id = Column(Integer, ForeignKey('insta_account.id'))
-    bot = Column(Enum(BotType))
-    interval = Column(Float)
-    action_interval = Column(Float)
-    rate = Column(Integer)
-    unix_pid = Column(String(16))
-    active = Column(Boolean)
-    created_at = Column(DateTime)
-
-    def __init__(self, insta_account_id, bot, interval, action_interval, rate, active=False, unix_pid=None,
-                 created_at=datetime.utcnow()):
-        self.insta_account_id = insta_account_id
-        self.bot = bot
-        self.interval = interval
-        self.action_interval = action_interval
-        self.rate = rate
-        self.unix_pid = unix_pid
-        self.active = active
-        self.created_at = created_at
-
-    def deactivate(self):
-        try:
-            os.kill(int(self.unix_pid), signal.SIGTERM)
-        except OSError as e:
-            logger.error("Could not kill process", e)
-        finally:
-            self.unix_pid = None
-            self.active = False
-
-        db.session.commit()
-
-    def activate(self, pid):
-        self.unix_pid = pid
-        self.active = True
-        db.session.commit()
-
-    def create(self):
-        from app.core.instafollow import InstaFollow
-        from app.core.instapost import InstaPost
-        from app.core.instaunfollow import InstaUnfollow
-
-        user = self.get_user()
-        if self.bot == BotType.FOLLOW:
-            return InstaFollow(
-                username=user.username,
-                password=user.password,
-                action_interval=self.action_interval,
-                rate=self.rate,
-                interval=self.interval,
-                similar_users=user.similar_users
-            )
-        elif self.bot == BotType.UNFOLLOW:
-            return InstaUnfollow(
-                username=user.username,
-                password=user.password,
-                action_interval=self.action_interval,
-                rate=self.rate,
-                interval=self.interval
-            )
-        elif self.bot == BotType.POST:
-            return InstaPost(
-                username=user.username,
-                password=user.password,
-                action_interval=self.action_interval,
-                rate=self.rate,
-                interval=self.interval
-            )
-
-    def get_user(self):
-        return InstaAccount.query.filter_by(id=self.insta_account_id).first()
-
-    def __repr__(self):
-        return '<User %r Bot %r>' % (self.insta_account_id, self.bot)
-
-
-def main():
-    db.create_all()
-    db.session.commit()
-    # account = InstaAccount('hwzearth', '1234')
-    # db.session.add(account)
-    # db.session.commit()
-    #
-    # hwzearth = InstaAccount.query.filter_by(username='hwzearth').first()
-    # print hwzearth
-    # content = Content(hwzearth.id, 'caption', 'url', 'path')
-    # bot = Bot(hwzearth.id, BotType.FOLLOW, 1.0, 2.0, 3)
-    #
-    # db.session.add(content)
-    # db.session.add(bot)
-    # db.session.commit()
-    # app.run(host="0.0.0.0", port="5000")
-
-
-if __name__ == '__main__':
-    main()

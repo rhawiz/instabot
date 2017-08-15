@@ -2,6 +2,7 @@ import logging
 
 import click
 
+from app import logger
 from instaunfollow import InstaUnfollow
 
 from instafollow import InstaFollow
@@ -15,11 +16,11 @@ def collect_followers(follow_bot, unfollow_bot):
         try:
             unfollow_bot.start()
         except Exception, e:
-            logging.exception(e)
+            logger.exception(e)
         try:
             follow_bot.start()
         except Exception, e:
-            logging.exception(e)
+            logger.exception(e)
 
 
 @click.command()

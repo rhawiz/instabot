@@ -1,12 +1,13 @@
 import os
 import uuid
 
-from app import logger
+import logging
+
 from flask import request, redirect, url_for, flash, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 from app.core.instagramapi import InstagramAPI as API
 from app import app, db
-from models import Content, InstaAccount, Bot
+from models import Content, InstaAccount
 from config import Config as cfg
 from config import basedir
 
@@ -74,13 +75,6 @@ def verify_photo():
     return redirect(url_for('view_contents'))
 
 
-@app.route('/bots', methods=['GET'])
-def active_bots():
-    bots = Bot.query.all()
-    data = [(b.unix_pid, b.bot, b.get_user().username, b.rate, b.interval, b.created_at) for b in bots]
-    return render_template('bots.html', content=data)
-
-
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
     accounts = [a for a in InstaAccount.query.all()]
@@ -93,12 +87,9 @@ def toggle_bot():
     if request.method == 'POST':
         account_id = request.form.get('account_id')
         account = InstaAccount.query.filter_by(id=account_id).first()
-        logger.info("Toggling account {}...".format(account.username))
         if account.active:
-            logger.info("Deactivating bot for {}...".format(account.username))
             account.deactivate()
         else:
-            logger.info("Activating bot for {}...".format(account.username))
 
             account.activate()
 
@@ -129,7 +120,7 @@ def accounts():
                 db.session.add(account)
                 db.session.commit()
             except Exception as e:
-                logger.error(e)
+                logging.error(e)
             flash("User '{}' succesfully added.".format(username), "success")
 
         else:
@@ -152,90 +143,6 @@ def delete_account():
             db.session.commit()
     return redirect(url_for('dashboard'))
 
-
-@app.route('/stop', methods=['POST'])
-def stop_bot():
-    if request.method == 'POST':
-        logger.info("Attempting to kill bot...")
-
-        pid = request.form.get('pid')
-
-        bot = Bot.query.filter_by(unix_pid=pid).first()
-
-        try:
-            bot.deactivate()
-
-        except OSError as e:
-            logger.error(e)
-
-    return redirect(url_for('active_bots'))
-
-
-#
-# @app.route('/follow_bot', methods=['POST'])
-# def follow_bot():
-#     if request.method == 'POST':
-#         username = request.form.get('username')
-#         password = request.form.get('password')
-#         similar_users_unparsed = request.form.get('users')
-#         follow_rate = int(request.form.get('frate'))
-#         unfollow_rate = int(request.form.get('urate'))
-#         wait = int(request.form.get('wait'))
-#         follow_action_wait = int(request.form.get('faction_wait'))
-#         unfollow_action_wait = int(request.form.get('uaction_wait'))
-#         follow_first = request.form.get('follow_first')
-#
-#         if username and password:
-#
-#             similar_users = similar_users_unparsed.split(",")
-#             for idx, user in enumerate(similar_users):
-#                 similar_users[idx] = user.strip()
-#
-#             p = multiprocessing.Process(target=collect_followers,
-#                                         args=(
-#                                             username, password, similar_users, follow_rate, unfollow_rate, wait,
-#                                             follow_action_wait, unfollow_action_wait))
-#
-#             p.start()
-#             if p.is_alive():
-#                 data = {
-#                     'process': p,
-#                     'bot': 'follow',
-#                     'username': username,
-#                     'rate': "{}/{}".format(follow_rate, unfollow_rate),
-#                     'wait': str(wait),
-#                     'created_at': time.strftime("%Y-%m-%d at %H:%M"),
-#                 }
-#
-#                 processes[str(p.pid)] = data
-#     return redirect(url_for('active_bots'))
-#
-#
-# @app.route('/post_bot', methods=['POST'])
-# def post_bot():
-#     if request.method == 'POST':
-#         post_rate = request.form.get('post_rate')
-#         username = request.form.get('username')
-#         password = request.form.get('password')
-#         post_rate_secs = float(post_rate) * 60.0
-#         if username and password:
-#             p = multiprocessing.Process(target=post_contents, args=(username, password, post_rate_secs))
-#             p.start()
-#
-#             if p.is_alive():
-#                 data = {
-#                     'process': p,
-#                     'bot': 'post',
-#                     'username': username,
-#                     'rate': "1",
-#                     'wait': post_rate,
-#                     'created_at': time.strftime("%Y-%m-%d at %H:%M"),
-#
-#                 }
-#
-#                 processes[str(p.pid)] = data
-#     return redirect(url_for('active_bots'))
-#
 
 @app.route('/delete_content', methods=['POST'])
 def delete_content():

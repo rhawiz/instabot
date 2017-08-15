@@ -1,7 +1,9 @@
-import logging
 from random import uniform
 from time import sleep
-from app import db
+
+import logging
+
+from app import db, logger
 from instagramapi import InstagramAPI
 
 
@@ -13,6 +15,8 @@ class InstaPost:
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
+        self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instapost'})
+
         self.API = InstagramAPI(self.username, self.password) if API is None else API
 
     def _get_content(self):
@@ -28,14 +32,14 @@ class InstaPost:
                 if self.API.login():
                     return True
             except Exception as e:
-                logging.error("Failed to login", e)
+                pass
             sleep(6)
             attempts += 1
 
         return False
 
     def start(self):
-        logging.info("Post bot started...")
+        self.logger.info("Post bot started for user {}...".format(self.username))
 
         if not self.API.is_logged_in:
             if not self._login():
@@ -56,19 +60,19 @@ class InstaPost:
                     elif content.type == 'video':
                         self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
                 except (IOError, Exception) as e:
-                    logging.exception(e)
+                    self.logger.exception(e)
 
                 try:
                     content.delete_content()
                 except Exception as e:
-                    logging.exception(e)
+                    self.logger.exception(e)
                 finally:
                     db.session.delete(content)
                     db.session.commit()
 
             if not (progress % self.rate):
                 progress = 0
-                logging.debug("Instapost: sleeping {}mins".format(self.interval / 60))
+                self.logger.info("Instapost for user {} sleeping for {}mins".format(self.username, self.interval / 60))
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
 
             # Sleep n seconds +/ 10% to induce randomness between each action

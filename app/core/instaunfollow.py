@@ -1,10 +1,9 @@
-import json
 from random import randint, uniform
-from time import sleep, time
+from time import sleep
 
-import click
 import logging
 
+from app import logger
 from instagramapi import InstagramAPI
 
 
@@ -16,10 +15,11 @@ class InstaUnfollow:
         self.rate = rate
         self.interval = interval
         self.unfollow_all = unfollow_all
+        self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instaunfollow'})
         self.API = InstagramAPI(self.username, self.password) if API is None else API
 
     def _get_user_ids(self):
-        logging.info('Collecting users to unfollow...', extra={'user': self.username})
+        self.logger.info('Collecting users to unfollow...')
 
         # Get people followings
         following_details = self.API.get_total_self_followings()
@@ -50,7 +50,7 @@ class InstaUnfollow:
                 if self.API.login():
                     return True
             except Exception as e:
-                logging.error("Failed to login", e)
+                self.logger.error("Failed to login", e)
             sleep(6)
             attempts += 1
 
@@ -62,7 +62,7 @@ class InstaUnfollow:
             if not self._login():
                 return False
 
-        logging.info("Unfollow bot started for user {}...".format(self.API.username))
+        self.logger.info("Unfollow bot started for user {}...".format(self.API.username))
 
         users = self._get_user_ids()
 

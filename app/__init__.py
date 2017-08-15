@@ -19,17 +19,18 @@ my_loader = jinja2.ChoiceLoader([
 app.jinja_loader = my_loader
 
 logger = logging.getLogger(__name__)
+logging.getLogger("requests").setLevel(logging.INFO)
 syslog = logging.StreamHandler()
-formatter = logging.Formatter('[%(asctime)s][%(levelname)s] %(message)s')
+formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
 syslog.setFormatter(formatter)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(syslog)
-
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    logger.addHandler(syslog)
 
 bot_config = {
     'follow': {
         'action_interval': 4.0,
-        'interval': 4400,
+        'interval': 5000,
         'rate': 60
     },
     'unfollow': {
@@ -43,11 +44,5 @@ bot_config = {
         'rate': 1
     }
 }
-
-# logging.basicConfig(
-#     filename="app.log",
-#     format='[%(asctime)s][%(levelname)s][%(user)] %(message)s',
-#     datefmt='%d-%m-%Y %I:%M:%S %p', level=logging.DEBUG
-# )
 
 from app import views, models

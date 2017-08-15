@@ -1,3 +1,5 @@
+import logging
+
 from app import logger
 from random import randint, uniform
 from time import sleep
@@ -18,11 +20,13 @@ class InstaFollow:
         self.action_interval = action_interval
         self.rate = rate
         self.interval = interval
+        self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instafollow'})
+
         self.API = InstagramAPI(self.username, self.password) if API is None else API
 
     def _get_user_ids(self, save_to=None):
 
-        logger.info('Collecting users to follow...')
+        self.logger.info('Collecting users to follow...')
 
         # Randomly select root account to search for users
         account = self.similar_users[randint(0, len(self.similar_users) - 1)]
@@ -51,7 +55,7 @@ class InstaFollow:
             try:
                 users = self.API.last_json.get('users')
             except ChunkedEncodingError, e:
-                logger.error("Failed to retrieve user list", e)
+                self.logger.error("Failed to retrieve user list", e)
                 users = []
 
             for user in users:
@@ -60,7 +64,7 @@ class InstaFollow:
 
         user_ids = list(set(user_ids))
 
-        logger.info("Found {} new users...".format(len(user_ids)))
+        self.logger.info("Found {} new users...".format(len(user_ids)))
 
         return user_ids
 
@@ -71,7 +75,7 @@ class InstaFollow:
                 if self.API.login():
                     return True
             except Exception as e:
-                logger.error("Failed to login to {}...".format(self.API.username), e)
+                self.logger.error("Failed to login...".format(self.API.username), e)
 
             sleep(6)
             attempts += 1
@@ -84,12 +88,13 @@ class InstaFollow:
             if not self._login():
                 return False
 
-        logger.info("Follow bot started for account {}...".format(self.API.username))
+        self.logger.info("Follow bot started...".format(self.API.username))
         users = []
         while len(users) < 7000:
             users += self._get_user_ids()
         progress = 0
         bad_requests = 0
+        successful_requests = 0
         while users:
             progress += 1
             if not self.API.is_logged_in:
@@ -102,20 +107,30 @@ class InstaFollow:
             if self.API.last_response.status_code in (429, 400):
                 users.append(id)
                 bad_requests += 1
+            elif self.API.last_response.status_code == 200:
+                successful_requests += 1
 
             if bad_requests == 10:
-                sleep(randint(60, 100))
+                self.logger.info("10 bad requests...sleeping for 3 mins 20 secs.")
+                sleep(200)
                 bad_requests = 0
 
-            logger.debug(self.API.username)
-            logger.debug(self.API.last_response.content)
+            self.logger.debug(self.API.username)
+            self.logger.debug(self.API.last_response.content)
 
             if not (progress % self.rate):
                 progress = 0
                 followings = len(self.API.get_total_self_followings())
                 if followings > 7000:
                     break
-                sleep(uniform(self.interval * 0.9, self.interval * 1.1))
+
+                wait = uniform(self.interval * 0.9, self.interval * 1.1)
+                self.logger.info(
+                    "Cycle ended for user {} with {} successful requests and {} followers...sleeping for {}mins".format(
+                        self.username, successful_requests, followings,
+                        wait / 60))
+                successful_requests = 0
+                sleep(wait)
 
             # Sleep n seconds +/ 10% to induce randomness between each action
             sleep(uniform(self.action_interval * 0.9, self.action_interval * 1.1))
