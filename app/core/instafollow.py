@@ -75,7 +75,7 @@ class InstaFollow:
                 if self.API.login():
                     return True
             except Exception as e:
-                self.logger.error("Failed to login...".format(self.API.username), e)
+                self.logger.exception("Failed to login...")
 
             sleep(6)
             attempts += 1
@@ -88,7 +88,7 @@ class InstaFollow:
             if not self._login():
                 return False
 
-        self.logger.info("Follow bot started...".format(self.API.username))
+        self.logger.info("Follow bot started...")
         users = []
         while len(users) < 7000:
             users += self._get_user_ids()

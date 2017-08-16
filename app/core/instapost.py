@@ -39,7 +39,7 @@ class InstaPost:
         return False
 
     def start(self):
-        self.logger.info("Post bot started for user {}...".format(self.username))
+        self.logger.info("Post bot started...")
 
         if not self.API.is_logged_in:
             if not self._login():
@@ -59,10 +59,12 @@ class InstaPost:
                         self.API.upload_photo(photo=content.path, caption=content.caption)
                     elif content.type == 'video':
                         self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
+                    self.logger.info("Successfully posted {}...".format(content.type))
                 except (IOError, Exception) as e:
                     self.logger.exception(e)
 
                 try:
+                    self.logger.info("Deleting content...")
                     content.delete_content()
                 except Exception as e:
                     self.logger.exception(e)
@@ -72,7 +74,7 @@ class InstaPost:
 
             if not (progress % self.rate):
                 progress = 0
-                self.logger.info("Instapost for user {} sleeping for {}mins".format(self.username, self.interval / 60))
+                self.logger.info("Sleeping for {}mins".format(self.interval / 60))
                 sleep(uniform(self.interval * 0.9, self.interval * 1.1))
 
             # Sleep n seconds +/ 10% to induce randomness between each action

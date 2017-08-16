@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
+from app import logger
 import imageio
 import requests
 import random
@@ -18,8 +19,6 @@ from moviepy.editor import VideoFileClip
 
 import struct
 import imghdr
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 def get_image_size(fname):
@@ -79,6 +78,7 @@ class InstagramAPI:
     # IGDataPath          # Data storage path
 
     def __init__(self, username, password, debug=False, IGDataPath=None):
+        self.logger = logging.LoggerAdapter(logger, {'user': username, 'bot': 'API'})
         m = hashlib.md5()
         m.update(username.encode('utf-8') + password.encode('utf-8'))
         self.device_id = self.generate_device_id(m.hexdigest())
@@ -122,7 +122,7 @@ class InstagramAPI:
                     self.getv2_inbox()
                     self.get_recent_activity()
 
-                    logging.info("Successfully logged in as user {}".format(self.username))
+                    self.logger.info("Successfully logged in as user {}".format(self.username))
 
                     return True
 
@@ -658,7 +658,6 @@ class InstagramAPI:
     def send_request(self, endpoint, post=None, login=False):
         if (not self.is_logged_in and not login):
             raise Exception("Not logged in!\n")
-            return;
 
         self.s.headers.update({'Connection': 'close',
                                'Accept': '*/*',
@@ -671,7 +670,8 @@ class InstagramAPI:
             response = self.s.post(self.API_URL + endpoint, data=post)  # , verify=False
         else:  # GET
             response = self.s.get(self.API_URL + endpoint)  # , verify=False
-
+        self.logger.debug("'{}' {} {} {}".format(response.request.method, response.status_code,
+                                           ' -> '.join([r for r in response.history]), response.url))
         if response.status_code == 200:
             self.last_response = response
             self.last_json = json.loads(response.text)
