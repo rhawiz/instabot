@@ -41,7 +41,7 @@ bot_config = {
     'post': {
         'action_interval': 1.0,
         'interval': 28800,
-        'rate': 4
+        'rate': 1
     }
 }
 

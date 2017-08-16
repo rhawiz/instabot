@@ -18,6 +18,7 @@ from app import app, db, bot_config
 
 logger = logging.LoggerAdapter(logger, {'user': "", 'bot': 'instaccount'})
 
+
 class InstaAccount(db.Model):
     """
     Instagram User
@@ -173,12 +174,12 @@ def grow_followers_worker(follow_bot, unfollow_bot):
             with app.app_context():
                 bot1.start()
         except Exception, e:
-            logger.critical("Unfollow failed to start", e)
+            logger.exception("Unfollow failed to start")
         try:
             with app.app_context():
                 bot2.start()
         except Exception, e:
-            logger.critical("Follow failed to start", e)
+            logger.exception("Follow failed to start")
 
 
 def instapost_worker(bot):
