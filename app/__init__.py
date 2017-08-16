@@ -23,7 +23,7 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 syslog = logging.StreamHandler()
 formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
 syslog.setFormatter(formatter)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 #if not logger.handlers:
 logger.addHandler(syslog)
 
