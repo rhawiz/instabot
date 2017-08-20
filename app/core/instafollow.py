@@ -1,3 +1,4 @@
+import json
 import logging
 
 from app import logger
@@ -115,8 +116,14 @@ class InstaFollow:
                 sleep(200)
                 bad_requests = 0
 
-            self.logger.debug(self.API.username)
             self.logger.debug(self.API.last_response.content)
+
+            try:
+                message = json.loads(self.API.last_response.content).get('message')
+                if "you're following the max limit of accounts" in message:
+                    break
+            except Exception as e:
+                pass
 
             if not (progress % self.rate):
                 progress = 0
