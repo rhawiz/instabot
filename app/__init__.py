@@ -30,7 +30,7 @@ logger.addHandler(syslog)
 bot_config = {
     'follow': {
         'action_interval': 4.0,
-        'interval': 2000,
+        'interval': 4000,
         'rate': 40
     },
     'unfollow': {
