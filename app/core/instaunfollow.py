@@ -2,11 +2,21 @@ from random import randint, uniform
 from time import sleep
 
 import logging
-
 import click
 
-from app import logger
 from instagramapi import InstagramAPI
+
+
+def get_logger():
+    logger = logging.getLogger(__name__)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    syslog = logging.StreamHandler()
+    formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
+    syslog.setFormatter(formatter)
+    logger.setLevel(logging.DEBUG)
+    # if not logger.handlers:
+    logger.addHandler(syslog)
+    return logger
 
 
 class InstaUnfollow:
@@ -17,6 +27,11 @@ class InstaUnfollow:
         self.rate = rate
         self.interval = interval
         self.unfollow_all = unfollow_all
+        try:
+            from app import logger
+        except ImportError:
+            logger = get_logger
+
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instaunfollow'})
         self.API = InstagramAPI(self.username, self.password) if API is None else API
 
@@ -92,6 +107,7 @@ class InstaUnfollow:
 
             # Sleep n seconds +/ 10% to induce randomness between each action
             sleep(uniform(self.action_interval * 0.9, self.action_interval * 1.1))
+
 
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
