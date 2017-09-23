@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from app import logger
 import imageio
 import requests
 import random
@@ -78,6 +77,11 @@ class InstagramAPI:
     # IGDataPath          # Data storage path
 
     def __init__(self, username, password, debug=False, IGDataPath=None):
+        try:
+            from app import logger
+        except ImportError:
+            from utils import get_logger
+            logger = get_logger()
         self.logger = logging.LoggerAdapter(logger, {'user': username, 'bot': 'API'})
         m = hashlib.md5()
         m.update(username.encode('utf-8') + password.encode('utf-8'))
@@ -671,7 +675,7 @@ class InstagramAPI:
         else:  # GET
             response = self.s.get(self.API_URL + endpoint)  # , verify=False
         self.logger.debug("'{}' {} {} {}".format(response.request.method, response.status_code,
-                                           ' -> '.join([r for r in response.history]), response.url))
+                                                 ' -> '.join([r for r in response.history]), response.url))
         if response.status_code == 200:
             self.last_response = response
             self.last_json = json.loads(response.text)

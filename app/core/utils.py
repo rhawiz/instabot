@@ -5,6 +5,8 @@ import random
 
 import sqlite3
 
+import logging
+
 BASE_REQUEST_HEADER = {
     'ACCEPT_LANGUAGE': 'en-GB,en;q=0.8,en-US;q=0.6'
 }
@@ -96,6 +98,17 @@ def generate_request_header():
     header = BASE_REQUEST_HEADER
     header["User-Agent"] = USER_AGENT_HEADER_LIST[random.randint(0, len(USER_AGENT_HEADER_LIST) - 1)]
     return header
+
+def get_logger():
+    logger = logging.getLogger(__name__)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    syslog = logging.StreamHandler()
+    formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
+    syslog.setFormatter(formatter)
+    logger.setLevel(logging.DEBUG)
+    # if not logger.handlers:
+    logger.addHandler(syslog)
+    return logger
 
 
 def execute_query(db_path, sql_query):

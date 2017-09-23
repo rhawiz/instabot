@@ -7,18 +7,6 @@ import click
 from instagramapi import InstagramAPI
 
 
-def get_logger():
-    logger = logging.getLogger(__name__)
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    syslog = logging.StreamHandler()
-    formatter = logging.Formatter('[%(asctime)s][%(levelname)s][%(user)s][%(bot)s] %(message)s')
-    syslog.setFormatter(formatter)
-    logger.setLevel(logging.DEBUG)
-    # if not logger.handlers:
-    logger.addHandler(syslog)
-    return logger
-
-
 class InstaUnfollow:
     def __init__(self, username, password, API=None, action_interval=8.0, rate=120, interval=5400, unfollow_all=True):
         self.username = username
@@ -30,6 +18,7 @@ class InstaUnfollow:
         try:
             from app import logger
         except ImportError:
+            from utils import get_logger
             logger = get_logger
 
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instaunfollow'})
@@ -113,5 +102,9 @@ class InstaUnfollow:
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
 @click.option('--password', default='', prompt='Password:', help='Instagram account name')
 def main(username, password):
+    print username
     bot = InstaUnfollow(username=username, password=password)
     bot.start()
+
+if __name__ == "__main__":
+    main()
