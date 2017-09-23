@@ -2,6 +2,7 @@ import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from config import *
+import jinja2
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
@@ -10,7 +11,6 @@ app.secret_key = 'test'
 
 # app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-import jinja2
 
 my_loader = jinja2.ChoiceLoader([
     app.jinja_loader,

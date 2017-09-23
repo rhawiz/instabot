@@ -3,6 +3,8 @@ from time import sleep
 
 import logging
 
+import click
+
 from app import logger
 from instagramapi import InstagramAPI
 
@@ -90,3 +92,10 @@ class InstaUnfollow:
 
             # Sleep n seconds +/ 10% to induce randomness between each action
             sleep(uniform(self.action_interval * 0.9, self.action_interval * 1.1))
+
+@click.command()
+@click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
+@click.option('--password', default='', prompt='Password:', help='Instagram account name')
+def main(username, password):
+    bot = InstaUnfollow(username=username, password=password)
+    bot.start()

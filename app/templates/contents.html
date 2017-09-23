@@ -57,7 +57,9 @@
             {{user.username}}
         </td>
         <td>
-            {{caption}}
+            <input type="text" value={{caption}} readonly="true" onclick="this.readOnly=false;" onblur="this.readOnly=true;">
+
+
         </td>
         <td>
             <a href="{{url}}">

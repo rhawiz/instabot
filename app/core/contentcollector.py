@@ -1,6 +1,6 @@
-
+import urllib
 from random import randint
-
+import moviepy.editor as mp
 import re
 from time import sleep
 
@@ -11,25 +11,36 @@ from app.core.utils import generate_request_header
 
 
 class ContentCollector:
-    REDDIT_URL = "https://www.reddit.com/r/{}/top/?sort=top&t={}&count={}"
+    REDDIT_URL = "https://www.reddit.com/r/{category}/top/?sort=top&t={sort}&count={page}"
     TUMBLR_URL = "https://www.tumblr.com/search/{}"
 
     def _get_reddit_content(self, subreddit, sort):
-        random_page = randint(0, 10) * 25
-        reddit_url = self.REDDIT_URL.format(subreddit, sort, random_page)
+        random_page = randint(0, 0) * 25
+        for page in range(0, 200, 25):
+            url = self.REDDIT_URL.format(category=subreddit, sort=sort, page=page)
 
-        html = requests.get(reddit_url, headers=generate_request_header()).content
+            html = requests.get(url, headers=generate_request_header()).content
 
-        soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(html, "lxml")
 
-        content = soup.findAll(name="a", attrs={"class": "title may-blank outbound "})
+            contents = soup.findAll(name="a", attrs={"class": "title may-blank outbound"})
 
-        content = content[randint(0, len(content) - 1)]
+            for content in contents:
 
-        title = re.sub(r"\[.*\]", "", content.text).strip()
-        img_url = content["href"]
+                title = re.sub(r"\[.*\]", "", content.text).strip()
+                content_url = content["href"]
 
-        print title, img_url
+                fmt = content_url.split(".")[-1]
+
+                file_name = "tmp." + fmt
+
+                urllib.urlretrieve(content_url, file_name.format(fmt))
+
+                if "gif" in fmt:
+                    clip = mp.VideoFileClip("test.gif")
+                    clip.write_videofile("test.mp4")
+
+                print title, content_url
 
     def _get_tumblr_content(self, search_query):
         search_query = re.sub("[ ]+", "+", search_query)
@@ -62,7 +73,6 @@ class ContentCollector:
                     # output = open(path, "wb+")
                     # output.write(resource.read())
                     # output.close()
-
 
 
 if __name__ == '__main__':
