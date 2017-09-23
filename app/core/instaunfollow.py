@@ -19,7 +19,7 @@ class InstaUnfollow:
             from app import logger
         except ImportError:
             from utils import get_logger
-            logger = get_logger
+            logger = get_logger()
 
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instaunfollow'})
         self.API = InstagramAPI(self.username, self.password) if API is None else API
