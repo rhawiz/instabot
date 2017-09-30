@@ -3,7 +3,8 @@ import uuid
 
 import logging
 
-from flask import request, redirect, url_for, flash, render_template, send_from_directory
+import requests
+from flask import request, redirect, url_for, flash, render_template, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from app.core.instagramapi import InstagramAPI as API
 from app import app, db
@@ -154,6 +155,28 @@ def delete_content():
             db.session.commit()
 
         return redirect(url_for('view_contents'))
+
+
+@app.route('/generate_tags/<categories>', methods=['GET'])
+def generate_tag(categories):
+    print(categories)
+    if request.method == 'GET':
+        print(categories)
+        category_list = categories.split(" ")
+        tags = []
+        for category in category_list:
+            try:
+                resp = requests.get("https://d212rkvo8t62el.cloudfront.net/tag/{}".format(category.strip()))
+                _dict = resp.json()
+                if not _dict:
+                    continue
+                results = _dict.get("results")
+                for res in results:
+                    tags.append("#{}".format(res.get("tag")))
+            except Exception as e:
+                logging.exception(e)
+
+        return " ".join(tags)
 
 
 @app.route('/upload', methods=['POST'])

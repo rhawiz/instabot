@@ -1,5 +1,20 @@
 <!doctype html>
+
 <html>
+<script>
+
+function generateTags(id) {
+    categories = document.getElementById(id.toString().concat("_category")).value;
+    console.log(categories);
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "GET", "/generate_tags/".concat(categories), false );
+    xmlHttp.send(null);
+    tags = xmlHttp.responseText;
+    console.log(tags);
+    document.getElementById(id.toString().concat("_caption")).innerHTML = tags;
+}
+
+</script>
 <title>Content Manager</title>
 <body>
 
@@ -57,8 +72,11 @@
             {{user.username}}
         </td>
         <td>
-            <input type="text" value={{caption}} readonly="true" onclick="this.readOnly=false;" onblur="this.readOnly=true;">
 
+            <textarea id="{{id}}_caption" readonly=true onclick="this.readOnly=false;" onblur="this.readOnly=true;">{{caption}}</textarea>
+            </br>
+            <input id="{{id}}_category" name="tag_category" type="text" placeholder="Category" style="width:30%">
+            <button onclick="generateTags({{id}});">Add tags</button>
 
         </td>
         <td>
