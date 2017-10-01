@@ -1,4 +1,5 @@
 import os
+import random
 import uuid
 
 import logging
@@ -41,11 +42,13 @@ def home():
 
 @app.route('/content', methods=['GET'])
 def view_contents():
+    tab = request.args.get('tab', 0)
+    print(tab)
     contents = Content.query.all()
     data = [(c.id, c.get_user(), c.caption, c.url, c.created_at, c.verified, c.type) for c in contents]
     accounts = InstaAccount.query.all()
 
-    return render_template('contents.html', content=data, accounts=accounts)
+    return render_template('contents.html', content=data, accounts=accounts, tab=tab)
 
 
 @app.route('/logs', methods=['GET'])
@@ -83,8 +86,13 @@ def dashboard():
     return render_template('dashboard.html', accounts=accounts)
 
 
-@app.route('/toggle', methods=['POST'])
-def toggle_bot():
+@app.route('/find_contents', methods=['POST'])
+def find_contents():
+    return redirect(url_for('view_contents', tab=1))
+
+
+@app.route('/toggle_follow', methods=['POST'])
+def toggle_follow_bot():
     if request.method == 'POST':
         account_id = request.form.get('account_id')
         account = InstaAccount.query.filter_by(id=account_id).first()
@@ -165,6 +173,7 @@ def generate_tag(categories):
         category_list = categories.split(" ")
         tags = []
         for category in category_list:
+
             try:
                 resp = requests.get("https://d212rkvo8t62el.cloudfront.net/tag/{}".format(category.strip()))
                 _dict = resp.json()
@@ -172,10 +181,14 @@ def generate_tag(categories):
                     continue
                 results = _dict.get("results")
                 for res in results:
-                    tags.append("#{}".format(res.get("tag")))
+                    try:
+                        tags.append("#{}".format(res.get("tag")))
+                    except UnicodeEncodeError as e:
+                        logging.error(e)
             except Exception as e:
-                logging.exception(e)
-
+                logging.error(e)
+        tags = tags[:30]
+        random.shuffle(tags)
         return " ".join(tags)
 
 

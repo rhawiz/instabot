@@ -1,125 +1,347 @@
 <!doctype html>
 
 <html>
-<script>
+<style>
 
-function generateTags(id) {
-    categories = document.getElementById(id.toString().concat("_category")).value;
+    .list {
+  font-family:sans-serif;
+}
+thead {
+display: table-header-group;
+}
+td {
+  padding:10px;
+  border:solid 1px #eee;
+}
+
+input {
+  border:solid 1px #ccc;
+  border-radius: 5px;
+  padding:7px 14px;
+  margin-bottom:10px
+}
+input:focus {
+  outline:none;
+  border-color:#aaa;
+}
+.sort {
+  padding:8px 30px;
+  border-radius: 6px;
+  border:none;
+  display:inline-block;
+  color:#fff;
+  text-decoration: none;
+  background-color: #28a8e0;
+  height:30px;
+}
+.sort:hover {
+  text-decoration: none;
+  background-color:#1b8aba;
+}
+.sort:focus {
+  outline:none;
+}
+.sort:after {
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  content:"";
+  position: relative;
+  top:-10px;
+  right:-5px;
+}
+.sort.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #fff;
+  content:"";
+  position: relative;
+  top:4px;
+  right:-5px;
+}
+.sort.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #fff;
+  content:"";
+  position: relative;
+  top:-4px;
+  right:-5px;
+}
+
+/* Style the tab */
+div.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+
+/* Style the buttons inside the tab */
+div.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+div.tab button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+div.tab button.active {
+    background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+</style>
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+
+
+<script type="text/javascript">
+
+function generateTags(textbox_id, categories) {
+    //categories = document.getElementById(textbox_id).value;
     console.log(categories);
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.open( "GET", "/generate_tags/".concat(categories), false );
     xmlHttp.send(null);
     tags = xmlHttp.responseText;
-    console.log(tags);
-    document.getElementById(id.toString().concat("_caption")).innerHTML = tags;
+    console.log(tags)
+    content = document.getElementById('caption').value.concat("\n\n".concat(tags));
+    document.getElementById('caption').value = content;
 }
+
+function openTab(evt, tabName) {
+    // Declare all variables
+    var i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
 
 </script>
 <title>Content Manager</title>
 <body>
 
-
-<form action="/upload" method="post" enctype="multipart/form-data">
-    Image from file <input type="file" name="file">
-    <br> <a> or from url <input disabled type="text" name="url" placeholder="not implemented yet"> </a>
-    <br>
-    <br>
-    User:
-    <select name="account">
-
-        {% for account in accounts %}
-
-        <option value={{account.id}}>{{account.username}}</option>
-
-        {% endfor %}
-    </select>
-
-    <br>
-    Caption: <input type="text" name="caption">
-    <input type="submit" value="Upload">
-
-</form>
+<div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'upload-tab')" id="upload-tab-button">Upload</button>
+    <button class="tablinks" onclick="openTab(event, 'collector-tab')" id="collector-tab-button">Content Collector
+    </button>
+</div>
+<div id="upload-tab" class="tabcontent">
 
 
-<table>
-    <tr>
-        <td>
-            <b>user</b>
-        </td>
-        <td>
-            <b>caption</b>
-        </td>
-        <td>
-            <b>img</b>
-        </td>
-        <td>
-            <b>date</b>
-        </td>
-        <td>
-            <b>verified</b>
-        </td>
-        <td>
-            <b>type</b>
-        </td>
-        <td>
-            <b>delete</b>
-        </td>
-    </tr>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        Image from file <input type="file" name="file">
+        <br> <a> or from url <input disabled type="text" name="url" placeholder="not implemented yet"> </a>
+        <br>
+        <br>
 
-    {% for id, user, caption, url, date, verified, type in content %}
-    <tr>
-        <td>
-            {{user.username}}
-        </td>
-        <td>
+        Caption:
+        <br>
+        <textarea style="width:40em;height:10em;" id="caption" name="caption"> </textarea>
+        <br>
+        <br>
+        <div style="width:30em">
+            <input id="categories" type="text" placeholder="Category (e.g. fit muscle bodybuilding)" style="width:70%">
+            <input value="Add tags" type="button"
+                   onclick="generateTags('caption', document.getElementById('categories').value);">
 
-            <textarea id="{{id}}_caption" readonly=true onclick="this.readOnly=false;" onblur="this.readOnly=true;">{{caption}}</textarea>
-            </br>
-            <input id="{{id}}_category" name="tag_category" type="text" placeholder="Category" style="width:30%">
-            <button onclick="generateTags({{id}});">Add tags</button>
+        </div>
+        <br>
+        <br>
+        User:
+        <select name="account">
 
-        </td>
-        <td>
-            <a href="{{url}}">
-                <img alt="{{url}}" src="{{url}}" width="60"/>
-            </a>
-        </td>
-        <td>
-            {{date}}
-        </td>
-        <td>
-            <form action="/verify" method="post">
-                <button type="submit" value={{id}}>
-                    {% if verified == 1 %}
-                    yes
-                    {% else %}
-                    no
-                    {% endif %}
-                </button>
-                <input type="hidden" value={{id}} name="id"/>
-                <input type="hidden" value={{verified}} name="verified"/>
-            </form>
-        </td>
-        <td>
-            {{type}}
-        </td>
+            {% for account in accounts %}
 
-        <td>
-            <form action="/delete_content" method="post">
+            <option value={{account.id}}>{{account.username}}</option>
 
-                <button type="submit" value={{id}}>X</button>
-                <input type="hidden" value={{user.id}} name="user_id"/>
-                <input type="hidden" value={{id}} name="content_id"/>
-            </form>
+            {% endfor %}
+        </select>
+        <br>
+        <br>
+        <input type="submit" value="Upload">
 
-        </td>
+    </form>
+</div>
 
-    </tr>
-    {% endfor %}
+<div id="collector-tab" class="tabcontent">
+    <form action="/find_contents" method="post">
+        User:
+        <select name="collector_account">
 
-</table>
+            {% for account in accounts %}
 
+            <option value={{account.id}}>{{account.username}}</option>
+
+            {% endfor %}
+        </select>
+        <br>
+        <br>
+        <input id="keywords" type="text" placeholder="Keywords separated by comma (e.g. scenery,large mountains,earth)"
+               style="width:30%">
+        <br>
+        <input type="submit" value="Find contents!">
+    </form>
+</div>
 
 <br>
+<br>
+<div id="contents">
+    <input class="search" placeholder="Search"/>
+    <button class="sort" data-sort="username">
+        Sort by username
+    </button>
+    <button class="sort" data-sort="date">
+        Sort by date
+    </button>
+    <button class="sort" data-sort="verified">
+        Sort by verified
+    </button>
+    <table>
+
+        <thead style="display:table-header-group;">
+        <tr>
+            <th><b>user</b></th>
+            <th><b>caption</b></th>
+            <th><b>img</b></th>
+            <th><b>date</b></th>
+            <th><b>verified</b></th>
+            <th><b>type</b></th>
+            <th><b>delete</b></th>
+        </tr>
+        </thead>
+
+        <tbody class="list">
+
+        {% for id, user, caption, url, date, verified, type in content %}
+        <tr>
+            <td class="username">
+                {{user.username}}
+            </td>
+            <td class="caption">
+
+                <textarea style="width:20em;height:10em" readonly="true" onclick="this.readOnly=false;"
+                          onblur="this.readOnly=true;">{{caption}}</textarea>
+
+
+            </td>
+            <td class="url">
+                <a href="{{url}}">
+                    <img alt="{{url}}" src="{{url}}" width="60"/>
+                </a>
+            </td>
+            <td class="date">
+                {{date}}
+            </td>
+            <td class="verified">
+                <form action="/verify" method="post">
+
+                    {% if verified == 1 %}
+                    <input class="search" type="submit" value="yes">
+                    {% else %}
+                    <input class="search" type="submit" value="no">
+                    {% endif %}
+
+                    <input type="hidden" value={{id}} name="id"/>
+                    <input type="hidden" value={{verified}} name="verified"/>
+                </form>
+            </td>
+            <td class="type">
+                {{type}}
+            </td>
+
+            <td>
+                <form action="/delete_content" method="post">
+
+                    <input value="X" type="submit">
+                    <input type="hidden" value={{user.id}} name="user_id"/>
+                    <input type="hidden" value={{id}} name="content_id"/>
+                </form>
+
+            </td>
+
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+<br>
 </body>
+<script>
+
+    var options = {
+  valueNames: [ 'username', 'caption', 'url', 'verified', 'date', 'type' ]
+};
+
+var userList = new List('contents', options);
+
+{% if tab == "0" %}
+    document.getElementById("upload-tab-button").click();
+
+{% else %}
+    {% if tab=="1" %}
+        document.getElementById("collector-tab-button").click();
+    {% else %}
+        document.getElementById("upload-tab-button").click();
+
+    {% endif %}
+
+{% endif %}
+
+
+
+
+
+
+
+
+
+
+</script>
 </html>
