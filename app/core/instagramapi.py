@@ -1,7 +1,9 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import logging
+import re
 
+from bs4 import BeautifulSoup
 import imageio
 import requests
 import random
@@ -13,6 +15,8 @@ import uuid
 import time
 import copy
 import math
+
+from dill import dill
 from requests_toolbelt import MultipartEncoder
 from moviepy.editor import VideoFileClip
 
@@ -51,16 +55,37 @@ def get_image_size(fname):
         return width, height
 
 
+def get_public_info(username):
+    if username[0] == "@":
+        username = username[1:]
+    url = "https://www.instagram.com/{}/".format(username)
+    html = requests.get(url).content
+    try:
+        a = re.search("window._sharedData \=.*\}", html)
+        json_raw = a.group().replace("window._sharedData = ", "")
+        return json.loads(json_raw)
+    except:
+        return None
+
+
+def get_user_info(username):
+    try:
+        info = get_public_info(username)
+        return info.get("entry_data", {}).get("ProfilePage", [{}])[0].get("user", {})
+    except:
+        return None
+
+
 class InstagramAPI:
     API_URL = 'https://i.instagram.com/api/v1/'
-    DEVICE_SETTINTS = {
+    DEVICE_SETTINGS = {
         'manufacturer': 'Xiaomi',
         'model': 'HM 1SW',
         'android_version': 18,
         'android_release': '4.3'
     }
     USER_AGENT = 'Instagram 9.2.0 Android ({android_version}/{android_release}; 320dpi; 720x1280; {manufacturer}; {model}; armani; qcom; en_US)'.format(
-        **DEVICE_SETTINTS)
+        **DEVICE_SETTINGS)
     IG_SIG_KEY = '012a54f51c49aa8c5c322416ab1410909add32c966bbaa0fe3dc58ac43fd7ede'
     EXPERIMENTS = 'ig_android_progressive_jpeg,ig_creation_growth_holdout,ig_android_report_and_hide,ig_android_new_browser,ig_android_enable_share_to_whatsapp,ig_android_direct_drawing_in_quick_cam_universe,ig_android_huawei_app_badging,ig_android_universe_video_production,ig_android_asus_app_badging,ig_android_direct_plus_button,ig_android_ads_heatmap_overlay_universe,ig_android_http_stack_experiment_2016,ig_android_infinite_scrolling,ig_fbns_blocked,ig_android_white_out_universe,ig_android_full_people_card_in_user_list,ig_android_post_auto_retry_v7_21,ig_fbns_push,ig_android_feed_pill,ig_android_profile_link_iab,ig_explore_v3_us_holdout,ig_android_histogram_reporter,ig_android_anrwatchdog,ig_android_search_client_matching,ig_android_high_res_upload_2,ig_android_new_browser_pre_kitkat,ig_android_2fac,ig_android_grid_video_icon,ig_android_white_camera_universe,ig_android_disable_chroma_subsampling,ig_android_share_spinner,ig_android_explore_people_feed_icon,ig_explore_v3_android_universe,ig_android_media_favorites,ig_android_nux_holdout,ig_android_search_null_state,ig_android_react_native_notification_setting,ig_android_ads_indicator_change_universe,ig_android_video_loading_behavior,ig_android_black_camera_tab,liger_instagram_android_univ,ig_explore_v3_internal,ig_android_direct_emoji_picker,ig_android_prefetch_explore_delay_time,ig_android_business_insights_qe,ig_android_direct_media_size,ig_android_enable_client_share,ig_android_promoted_posts,ig_android_app_badging_holdout,ig_android_ads_cta_universe,ig_android_mini_inbox_2,ig_android_feed_reshare_button_nux,ig_android_boomerang_feed_attribution,ig_android_fbinvite_qe,ig_fbns_shared,ig_android_direct_full_width_media,ig_android_hscroll_profile_chaining,ig_android_feed_unit_footer,ig_android_media_tighten_space,ig_android_private_follow_request,ig_android_inline_gallery_backoff_hours_universe,ig_android_direct_thread_ui_rewrite,ig_android_rendering_controls,ig_android_ads_full_width_cta_universe,ig_video_max_duration_qe_preuniverse,ig_android_prefetch_explore_expire_time,ig_timestamp_public_test,ig_android_profile,ig_android_dv2_consistent_http_realtime_response,ig_android_enable_share_to_messenger,ig_explore_v3,ig_ranking_following,ig_android_pending_request_search_bar,ig_android_feed_ufi_redesign,ig_android_video_pause_logging_fix,ig_android_default_folder_to_camera,ig_android_video_stitching_7_23,ig_android_profanity_filter,ig_android_business_profile_qe,ig_android_search,ig_android_boomerang_entry,ig_android_inline_gallery_universe,ig_android_ads_overlay_design_universe,ig_android_options_app_invite,ig_android_view_count_decouple_likes_universe,ig_android_periodic_analytics_upload_v2,ig_android_feed_unit_hscroll_auto_advance,ig_peek_profile_photo_universe,ig_android_ads_holdout_universe,ig_android_prefetch_explore,ig_android_direct_bubble_icon,ig_video_use_sve_universe,ig_android_inline_gallery_no_backoff_on_launch_universe,ig_android_image_cache_multi_queue,ig_android_camera_nux,ig_android_immersive_viewer,ig_android_dense_feed_unit_cards,ig_android_sqlite_dev,ig_android_exoplayer,ig_android_add_to_last_post,ig_android_direct_public_threads,ig_android_prefetch_venue_in_composer,ig_android_bigger_share_button,ig_android_dv2_realtime_private_share,ig_android_non_square_first,ig_android_video_interleaved_v2,ig_android_follow_search_bar,ig_android_last_edits,ig_android_video_download_logging,ig_android_ads_loop_count_universe,ig_android_swipeable_filters_blacklist,ig_android_boomerang_layout_white_out_universe,ig_android_ads_carousel_multi_row_universe,ig_android_mentions_invite_v2,ig_android_direct_mention_qe,ig_android_following_follower_social_context'
     SIG_KEY_VERSION = '4'
@@ -76,7 +101,9 @@ class InstagramAPI:
     # rank_token          # Rank token
     # IGDataPath          # Data storage path
 
-    def __init__(self, username, password, debug=False, IGDataPath=None):
+    def __init__(self, username, password, _uuid=None, token=None, username_id=None, device_id=None, s=None,
+                 debug=False,
+                 IGDataPath=None):
         try:
             from app import logger
         except ImportError:
@@ -89,6 +116,14 @@ class InstagramAPI:
         self.set_user(username, password)
         self.is_logged_in = False
         self.last_response = None
+        if (_uuid and token and username_id and device_id and s):
+            self.uuid = _uuid
+            self.token = token
+            self.username_id = username_id
+            self.device_id = device_id
+            self.s = s
+            self.rank_token = "{}_{}".format(self.username_id, self.uuid)
+            self.is_logged_in = True
 
     def set_user(self, username, password):
         self.username = username
@@ -276,7 +311,7 @@ class InstagramAPI:
                 'source_width': clip.size[0],
                 'source_height': clip.size[1],
             },
-            'device': self.DEVICE_SETTINTS,
+            'device': self.DEVICE_SETTINGS,
             '_csrftoken': self.token,
             '_uuid': self.uuid,
             '_uid': self.username_id,
@@ -294,7 +329,7 @@ class InstagramAPI:
             '_uuid': self.uuid,
             'caption': caption,
             'upload_id': upload_id,
-            'device': self.DEVICE_SETTINTS,
+            'device': self.DEVICE_SETTINGS,
             'edits': {
                 'crop_original_size': [w * 1.0, h * 1.0],
                 'crop_center': [0.0, 0.0],
@@ -749,3 +784,53 @@ class InstagramAPI:
             for item in temp["items"]:
                 liked_items.append(item)
         return liked_items
+
+
+def save_session(session, fname):
+    with open(fname, 'w') as f:
+        import pickle
+        pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), f)
+
+
+def load_session(fname):
+    with open(fname) as f:
+        import pickle
+        cookies = requests.utils.cookiejar_from_dict(pickle.load(f))
+        session = requests.session()
+        session.cookies = cookies
+        return session
+
+
+if __name__ == "__main__":
+    api = InstagramAPI(
+        username="theshitquote", password="raw12743"
+    )
+
+    api.login()
+
+    _uuid = api.uuid
+    token = api.token
+    username_id = api.username_id
+    device_id = api.device_id
+    s = api.s
+    save_session(s, "session.pkl")
+    print(api)
+    print(_uuid)
+    print(token)
+    print(username_id)
+    print(device_id)
+    print(s)
+    print s.cookies
+    s2 = load_session("session.pkl")
+    api2 = InstagramAPI(
+        username="theshitquote", password="raw12743",
+        _uuid=_uuid,
+        token=token,
+        username_id=username_id,
+        device_id=device_id,
+        s=s2
+
+    )
+
+    api2.follow(4113104274)
+    print(api2.last_json)

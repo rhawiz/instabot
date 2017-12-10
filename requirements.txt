@@ -10,3 +10,4 @@ sqlalchemy-migrate
 flup
 enum34==1.1.6
 psutil
+git+https://github.com/ping/instagram_private_api.git

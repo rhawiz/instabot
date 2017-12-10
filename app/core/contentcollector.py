@@ -63,6 +63,8 @@ class ContentCollector:
             for tag in tags:
                 temp = tag.replace(" ", "-")
 
+            print content, url
+
 
 
 
@@ -70,5 +72,5 @@ class ContentCollector:
 if __name__ == '__main__':
     collector = ContentCollector()
     while True:
-        collector._get_tumblr_content("scenery")
+        collector._get_tumblr_content("earthporn")
         sleep(10)

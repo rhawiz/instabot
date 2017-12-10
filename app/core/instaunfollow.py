@@ -4,7 +4,8 @@ from time import sleep
 import logging
 import click
 
-from instagramapi import InstagramAPI
+from instagram_private_api import Client
+from instagram_web_api import Client as WebClient
 
 
 class InstaUnfollow:
@@ -22,32 +23,18 @@ class InstaUnfollow:
             logger = get_logger()
 
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instaunfollow'})
-        self.API = InstagramAPI(self.username, self.password) if API is None else API
+        self.API = Client(self.username, self.password) if API is None else API
+        self.webAPI = WebClient()
 
     def _get_user_ids(self):
         self.logger.info('Collecting users to unfollow...')
 
         # Get people followings
-        following_details = self.API.get_total_self_followings()
 
-        followings = [d.get('pk') for d in following_details]
-
-        if self.unfollow_all:
-            return followings
-
-        followings = set(followings)
-
-        # Get all followers
-        followers_details = self.API.get_total_followers(username_id=self.API.username_id)
-
-        followers = [d.get('pk') for d in followers_details]
-
-        followers = set(followers)
-
-        # Find difference to get a list of people who are not following back
-        unfollow_list = list(followings - followers)
-
-        return unfollow_list
+        following = self.API.user_following(self.id)
+        following_users = following.get("users")
+        _ids = [user.get("pk", 0) for user in following_users]
+        return _ids
 
     def _login(self):
         attempts = 0
@@ -64,26 +51,26 @@ class InstaUnfollow:
 
     def start(self):
 
-        if not self.API.is_logged_in:
-            if not self._login():
-                return False
+        # if not self.API.is_logged_in:
+        #     if not self._login():
+        #         return False
 
         self.logger.info("Unfollow bot started for user {}...".format(self.API.username))
-
+        self.id = self.webAPI.user_info2(self.username).get("id")
         users = self._get_user_ids()
 
         progress = 0
         too_many_request_errors = 0
         while users:
             progress += 1
-            if not self.API.is_logged_in:
-                self.API.login()
+            # if not self.API.is_logged_in:
+            #     self.API.login()
 
             id = users.pop(0)
 
-            self.API.unfollow(id)
+            res = self.API.friendships_destroy(id)
 
-            if self.API.last_response.status_code == 429:
+            if res.get("status", False) != "ok":
                 users.append(id)
                 too_many_request_errors += 1
 
@@ -105,6 +92,7 @@ def main(username, password):
     print username
     bot = InstaUnfollow(username=username, password=password)
     bot.start()
+
 
 if __name__ == "__main__":
     main()

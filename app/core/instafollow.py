@@ -1,11 +1,14 @@
 import json
 import logging
 
+import requests
+
 from app import logger
 from random import randint, uniform
 from time import sleep
 from requests.exceptions import ChunkedEncodingError
-from instagramapi import InstagramAPI
+from instagram_private_api import Client
+from instagram_web_api import Client as WebClient
 
 
 class InstaFollow:
@@ -23,7 +26,8 @@ class InstaFollow:
         self.interval = interval
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instafollow'})
 
-        self.API = InstagramAPI(self.username, self.password) if API is None else API
+        self.API = Client(self.username, self.password) if API is None else API
+        self.webAPI = WebClient()
 
     def _get_user_ids(self, save_to=None):
 
@@ -31,10 +35,10 @@ class InstaFollow:
 
         # Randomly select root account to search for users
         account = self.similar_users[randint(0, len(self.similar_users) - 1)]
-        self.API.search_username(account)
+        username_info = self.API.username_info(account)
 
         # Get root account id
-        root_account_id = self.API.last_json.get('user').get('pk')
+        root_account_id = username_info.get('user').get('pk')
 
         # Get root account posts
         max_id = ''
@@ -42,19 +46,19 @@ class InstaFollow:
         media_ids = []
 
         for i in range(0, pages):
-            self.API.get_user_feed(root_account_id, max_id=max_id)
-            media_items = self.API.last_json.get('items')
+            user_feed = self.API.user_feed(root_account_id, max_id=max_id)
+            media_items = user_feed.get('items')
             for media in media_items:
                 media_ids.append(media.get('id'))
-            max_id = self.API.last_json.get('next_max_id')
+            max_id = user_feed.get('next_max_id')
 
         user_ids = []
 
         for media_id in media_ids:
-            self.API.get_media_likers(media_id)
+            media_likers = self.API.media_likers(media_id)
 
             try:
-                users = self.API.last_json.get('users')
+                users = media_likers.get('users')
             except ChunkedEncodingError, e:
                 self.logger.error("Failed to retrieve user list", e)
                 users = []
@@ -85,10 +89,6 @@ class InstaFollow:
 
     def start(self):
 
-        if not self.API.is_logged_in:
-            if not self._login():
-                return False
-
         self.logger.info("Follow bot started...")
         users = []
         while len(users) < 7000:
@@ -98,17 +98,17 @@ class InstaFollow:
         successful_requests = 0
         while users:
             progress += 1
-            if not self.API.is_logged_in:
-                self.API.login()
+            # if not self.API.is_logged_in:
+            #     self.API.login()
 
             id = users.pop(0)
 
-            self.API.follow(id)
+            res = self.API.friendships_create(id)
 
-            if self.API.last_response.status_code in (429, 400):
+            if res.get("status", False) != "ok":
                 users.append(id)
                 bad_requests += 1
-            elif self.API.last_response.status_code == 200:
+            elif res.get("status", False) == "ok":
                 successful_requests += 1
 
             if bad_requests == 10:
@@ -118,16 +118,9 @@ class InstaFollow:
 
             self.logger.debug(self.API.last_response.content)
 
-            try:
-                message = json.loads(self.API.last_response.content).get('message')
-                if "you're following the max limit of accounts" in message:
-                    break
-            except Exception as e:
-                pass
-
             if not (progress % self.rate):
                 progress = 0
-                followings = len(self.API.get_total_self_followings())
+                followings = self.webAPI.user_info2(self.username).get("follows", {}).get("count", 0)
                 if followings > 7000:
                     break
 

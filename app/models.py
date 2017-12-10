@@ -1,3 +1,4 @@
+import json
 import os
 import threading
 from datetime import datetime
@@ -14,7 +15,8 @@ import psutil
 from app import logger
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 
-from app import app, db, bot_config
+from app import app, db, default_config
+from app.core.instagramapi import get_public_info
 
 logger = logging.LoggerAdapter(logger, {'user': "", 'bot': 'instaccount'})
 
@@ -37,9 +39,29 @@ class InstaAccount(db.Model):
         self.password = password
         self.similar_users = similar_users
         self.created_at = created_at
+
         self.pid = pid
 
         self.active = active
+
+    def get_public_info(self):
+        user_data = get_public_info(self.username).get("entry_data", {}).get("ProfilePage", [{}])[0]
+        if "media" in user_data.get("user", {}):
+            user_data["user"].pop("media")
+        return user_data
+
+    def get_public_info_json(self):
+        return json.dumps(self.get_public_info(), indent=4)
+
+    def get_followers(self):
+        return get_public_info(self.username).get("entry_data", {}).get("ProfilePage", [{}])[0].get("user", {}).get(
+            "followed_by", {}).get(
+            "count")
+
+    def get_following(self):
+        return get_public_info(self.username).get("entry_data", {}).get("ProfilePage", [{}])[0].get("user", {}).get(
+            "follows", {}).get(
+            "count")
 
     def deactivate(self):
         try:
@@ -58,25 +80,32 @@ class InstaAccount(db.Model):
 
         db.session.commit()
 
-    def activate(self):
+    def activate(self, config=None):
         from app.core.instafollow import InstaFollow
         from app.core.instapost import InstaPost
         from app.core.instaunfollow import InstaUnfollow
-        from core.instagramapi import InstagramAPI
-        API = InstagramAPI(self.username, self.password)
+
+        # from app.core.instagramapi import InstagramAPI
+        from instagram_private_api import Client
+        # API = InstagramAPI(self.username, self.password)
+        API = Client(self.username, self.password)
+        # API.login()
+
         base_config = {
             'username': self.username,
             'password': self.password,
             'API': API
         }
-        follow_config = bot_config.get('follow')
+
+        config = default_config if config is None else config
+        follow_config = config.get('follow')
         follow_config.update(base_config)
         follow_config['similar_users'] = self.similar_users
 
-        unfollow_config = bot_config.get('unfollow')
+        unfollow_config = config.get('unfollow')
         unfollow_config.update(base_config)
 
-        post_config = bot_config.get('post')
+        post_config = config.get('post')
         post_config.update(base_config)
 
         follow_bot = InstaFollow(**follow_config)
@@ -189,5 +218,3 @@ def instapost_worker(bot):
                 bot.start()
         except Exception, e:
             logging.critical(e)
-
-

@@ -27,7 +27,7 @@ logger.setLevel(logging.DEBUG)
 #if not logger.handlers:
 logger.addHandler(syslog)
 
-bot_config = {
+default_config = {
     'follow': {
         'action_interval': 6.0,
         'interval': 3500,

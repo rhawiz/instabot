@@ -4,7 +4,7 @@ from time import sleep
 import logging
 
 from app import db, logger
-from instagramapi import InstagramAPI
+from instagram_private_api import Client
 
 
 class InstaPost:
@@ -17,7 +17,7 @@ class InstaPost:
         self.interval = interval
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instapost'})
 
-        self.API = InstagramAPI(self.username, self.password) if API is None else API
+        self.API = Client(self.username, self.password) if API is None else API
 
     def _get_content(self):
         from app.models import Content, InstaAccount
@@ -48,17 +48,18 @@ class InstaPost:
         progress = 0
         while True:
             progress += 1
-            if not self.API.is_logged_in:
-                self.API.login()
+            # if not self.API.is_logged_in:
+            #     self.API.login()
 
             content = self._get_content()
 
             if content is not None:
                 try:
                     if content.type == 'photo':
-                        self.API.upload_photo(photo=content.path, caption=content.caption)
+                        self.API.post_photo(photo_data=content.path, caption=content.caption)
                     elif content.type == 'video':
-                        self.API.upload_video(video=content.path, thumbnail=content.thumbnail, caption=content.caption)
+                        self.API.post_video(video_data=content.path, thumbnail=content.thumbnail,
+                                            caption=content.caption)
                     self.logger.info("Successfully posted {}...".format(content.type))
                 except (IOError, Exception) as e:
                     self.logger.exception(e)

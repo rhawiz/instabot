@@ -1,3 +1,4 @@
+import json
 import os
 import random
 import uuid
@@ -7,11 +8,11 @@ import logging
 import requests
 from flask import request, redirect, url_for, flash, render_template, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
-from app.core.instagramapi import InstagramAPI as API
 from app import app, db
 from models import Content, InstaAccount
 from config import Config as cfg
 from config import basedir
+from instagram_web_api import Client
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif', 'mp4'])
 
@@ -99,10 +100,43 @@ def toggle_follow_bot():
         if account.active:
             account.deactivate()
         else:
+            follow_rate = int(request.form.get('{}followRate'.format(account.username)))
+            follow_interval = int(request.form.get('{}followInterval'.format(account.username)))
+            follow_action_interval = int(request.form.get('{}followActionInterval'.format(account.username)))
+            unfollow_rate = int(request.form.get('{}unfollowRate'.format(account.username)))
+            unfollow_interval = int(request.form.get('{}unfollowInterval'.format(account.username)))
+            unfollow_action_interval = int(request.form.get('{}unfollowActionInterval'.format(account.username)))
+            post_rate = int(request.form.get('{}postRate'.format(account.username)))
+            post_interval = int(request.form.get('{}postInterval'.format(account.username)))
+            post_action_interval = int(request.form.get('{}postActionInterval'.format(account.username)))
 
-            account.activate()
+            config = {
+                'follow': {
+                    'action_interval': follow_action_interval,
+                    'interval': follow_interval,
+                    'rate': follow_rate
+                },
+                'unfollow': {
+                    'action_interval': unfollow_action_interval,
+                    'interval': unfollow_interval,
+                    'rate': unfollow_rate
+                },
+                'post': {
+                    'action_interval': post_action_interval,
+                    'interval': post_interval,
+                    'rate': post_rate
+                }
+            }
+            print(config)
+            account.activate(config)
 
         return redirect(url_for('dashboard'))
+
+
+@app.route('/public_info/<username>', methods=['GET'])
+def public_info(username):
+    api = Client()
+    return json.dumps(api.user_info2(username), indent=4)
 
 
 def verify_account(username, password):
