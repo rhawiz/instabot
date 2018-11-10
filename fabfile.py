@@ -58,7 +58,7 @@ def _build_docker_image(source_folder):
 
 def _run_docker_container():
     command = """
-    docker run -d --log-opt max-size=1m --log-opt max-file=5 -p 80:80
+    docker run -d --log-opt max-size=1m --log-opt max-file=5 -p 5000:5000
     --name instabot
     --restart always
     --volume ~/instabot:/app/
