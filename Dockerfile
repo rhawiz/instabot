@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:3.5
 RUN mkdir /app
 COPY . /app
 RUN touch /app/.env
