@@ -31,14 +31,17 @@ class InstaAccount(db.Model):
     similar_users = Column(String(1024))
     pid = Column(Integer)
     active = Column(Boolean)
+    session = Column(String(1024))
     created_at = Column(DateTime)
     __table_args__ = {'extend_existing': True}
 
-    def __init__(self, username, password, similar_users, pid=None, active=False, created_at=datetime.utcnow()):
+    def __init__(self, username, password, similar_users, session=None, pid=None, active=False,
+                 created_at=datetime.utcnow()):
         self.username = username
         self.password = password
         self.similar_users = similar_users
         self.created_at = created_at
+        self.session = session
 
         self.pid = pid
 
@@ -170,11 +173,11 @@ class Content(db.Model):
 
 
 def bot_worker(follow, unfollow, post):
-    while follow.API.is_logged_in is not True:
-        follow.API.login()
-        logger.info("failed to log in...retrying in 3 seconds.")
-        sleep(3)
-
+    # while follow.API.is_logged_in is not True:
+    #     follow.API.login()
+    #     logger.info("failed to log in...retrying in 3 seconds.")
+    #     sleep(3)
+    # follow.API.login()
     t1 = threading.Thread(target=grow_followers_worker, args=(follow, unfollow,))
     t2 = threading.Thread(target=instapost_worker, args=(post,))
     # print t2, t2.is_alive
@@ -202,12 +205,12 @@ def grow_followers_worker(follow_bot, unfollow_bot):
         try:
             with app.app_context():
                 bot1.start()
-        except Exception, e:
+        except Exception as e:
             logger.exception("Unfollow failed to start")
         try:
             with app.app_context():
                 bot2.start()
-        except Exception, e:
+        except Exception as e:
             logger.exception("Follow failed to start")
 
 
@@ -216,5 +219,5 @@ def instapost_worker(bot):
         try:
             with app.app_context():
                 bot.start()
-        except Exception, e:
+        except Exception as e:
             logging.critical(e)

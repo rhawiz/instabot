@@ -16,7 +16,7 @@ class InstaFollow:
         self.username = username
         self.password = password
 
-        if isinstance(similar_users, (str, unicode)):
+        if isinstance(similar_users, str):
             self.similar_users = [x.strip() for x in similar_users.split(",")]
         else:
             self.similar_users = similar_users
@@ -59,7 +59,7 @@ class InstaFollow:
 
             try:
                 users = media_likers.get('users')
-            except ChunkedEncodingError, e:
+            except ChunkedEncodingError as e:
                 self.logger.error("Failed to retrieve user list", e)
                 users = []
 
@@ -116,7 +116,10 @@ class InstaFollow:
                 sleep(200)
                 bad_requests = 0
 
-            self.logger.debug(self.API.last_response.content)
+            try:
+                self.logger.debug(self.API.last_response.content)
+            except Exception as e:
+                self.logger.debug(e)
 
             if not (progress % self.rate):
                 progress = 0

@@ -9,7 +9,7 @@ import requests
 from flask import request, redirect, url_for, flash, render_template, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from app import app, db
-from models import Content, InstaAccount
+from app.models import Content, InstaAccount
 from config import Config as cfg
 from config import basedir
 from instagram_web_api import Client
@@ -100,15 +100,16 @@ def toggle_follow_bot():
         if account.active:
             account.deactivate()
         else:
-            follow_rate = int(request.form.get('{}followRate'.format(account.username)))
-            follow_interval = int(request.form.get('{}followInterval'.format(account.username)))
-            follow_action_interval = int(request.form.get('{}followActionInterval'.format(account.username)))
-            unfollow_rate = int(request.form.get('{}unfollowRate'.format(account.username)))
-            unfollow_interval = int(request.form.get('{}unfollowInterval'.format(account.username)))
-            unfollow_action_interval = int(request.form.get('{}unfollowActionInterval'.format(account.username)))
-            post_rate = int(request.form.get('{}postRate'.format(account.username)))
-            post_interval = int(request.form.get('{}postInterval'.format(account.username)))
-            post_action_interval = int(request.form.get('{}postActionInterval'.format(account.username)))
+            
+            follow_rate = int(request.form.get('{}followRate'.format(account.id)))
+            follow_interval = int(request.form.get('{}followInterval'.format(account.id)))
+            follow_action_interval = int(request.form.get('{}followActionInterval'.format(account.id)))
+            unfollow_rate = int(request.form.get('{}unfollowRate'.format(account.id)))
+            unfollow_interval = int(request.form.get('{}unfollowInterval'.format(account.id)))
+            unfollow_action_interval = int(request.form.get('{}unfollowActionInterval'.format(account.id)))
+            post_rate = int(request.form.get('{}postRate'.format(account.id)))
+            post_interval = int(request.form.get('{}postInterval'.format(account.id)))
+            post_action_interval = int(request.form.get('{}postActionInterval'.format(account.id)))
 
             config = {
                 'follow': {

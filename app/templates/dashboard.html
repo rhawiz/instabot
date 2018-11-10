@@ -106,6 +106,7 @@ input:focus {
 
 
 
+
 </style>
 
 <head>
@@ -118,6 +119,7 @@ input:focus {
         function loadInfo(id, username){
             alert("HELLO");
         }
+
 
 
 
@@ -193,7 +195,7 @@ input:focus {
                 <div style="float:left">
                     <input type="hidden" name="account_id" value={{account.id}}>
                     {% if account.active == False %}
-                    <input type="image" src="http://clipart-library.com/data_images/537597.png"
+                    <input type="image" src="../static/play.jpg"
                            style="width:65px;border:none;" alt="Submit"/>
                     {% else %}
 
@@ -204,12 +206,12 @@ input:focus {
 
                 <button style="border: 0; background: transparent; padding-top:10px" type="button"
                         data-toggle="modal"
-                        data-target=#{{account.username}}SettingsModal>
+                        data-target=#{{account.id}}SettingsModal>
                     <img src="https://cdn1.iconfinder.com/data/icons/material-core/20/settings-128.png"
                          width="25" height="25" alt="submit"/>
                 </button>
                 <!-- Modal -->
-                <div class="modal fade" id={{account.username}}SettingsModal role="dialog">
+                <div class="modal fade" id={{account.id}}SettingsModal role="dialog">
                     <div class="modal-dialog">
 
                         <!-- Modal content-->
@@ -220,24 +222,25 @@ input:focus {
                             </div>
                             <div class="modal-body">
                                 <ul class="nav nav-tabs">
-                                    <li class="active"><a data-toggle="tab" href="#{{account.username}}followSettings">Follow
+                                    <li class="active"><a data-toggle="tab" href="#{{account.id}}followSettings">Follow
                                         settings</a>
                                     </li>
-                                    <li><a data-toggle="tab" href="#{{account.username}}unfollowSettings">Unfollow
+                                    <li><a data-toggle="tab" href="#{{account.id}}unfollowSettings">Unfollow
                                         settings</a></li>
-                                    <li><a data-toggle="tab" href="#{{account.username}}postSettings">Post settings</a>
+                                    <li><a data-toggle="tab" href="#{{account.id}}postSettings">Post settings</a>
                                     </li>
                                 </ul>
 
                                 <div class="tab-content">
-                                    <div id={{account.username}}followSettings class="tab-pane fade in active">
+                                    <div id={{account.id}}followSettings class="tab-pane fade in active">
                                         <table style="border:none">
                                             <tr>
                                                 <td>
                                                     <label> Rate: </label>
                                                 </td>
                                                 <td>
-                                                    <input type="text" value="40" placeholder="Rate" name={{account.username}}followRate>
+                                                    <input type="text" value="40" placeholder="Rate"
+                                                           name={{account.id}}followRate>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -246,7 +249,7 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="6" placeholder="Action Interval"
-                                                           name={{account.username}}followActionInterval>
+                                                           name={{account.id}}followActionInterval>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -255,12 +258,12 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="3500" placeholder="Interval"
-                                                           name={{account.username}}followInterval>
+                                                           name={{account.id}}followInterval>
                                                 </td>
                                             </tr>
                                         </table>
                                     </div>
-                                    <div id={{account.username}}unfollowSettings class="tab-pane fade">
+                                    <div id={{account.id}}unfollowSettings class="tab-pane fade">
                                         <table style="border:none">
                                             <tr>
                                                 <td>
@@ -268,7 +271,7 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="120" placeholder="Rate"
-                                                           name={{account.username}}unfollowRate>
+                                                           name={{account.id}}unfollowRate>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -277,7 +280,7 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="4" placeholder="Action Interval"
-                                                           name={{account.username}}unfollowActionInterval>
+                                                           name={{account.id}}unfollowActionInterval>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -286,19 +289,20 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="4000" placeholder="Interval"
-                                                           name={{account.username}}unfollowInterval>
+                                                           name={{account.id}}unfollowInterval>
                                                 </td>
                                             </tr>
                                         </table>
                                     </div>
-                                    <div id={{account.username}}postSettings class="tab-pane fade">
+                                    <div id={{account.id}}postSettings class="tab-pane fade">
                                         <table style="border:none">
                                             <tr>
                                                 <td>
                                                     <label> Rate: </label>
                                                 </td>
                                                 <td>
-                                                    <input type="text" value="1" placeholder="Rate" name={{account.username}}postRate>
+                                                    <input type="text" value="1" placeholder="Rate"
+                                                           name={{account.id}}postRate>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -307,7 +311,7 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="1" placeholder="Action Interval"
-                                                           name={{account.username}}postActionInterval>
+                                                           name={{account.id}}postActionInterval>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -316,7 +320,7 @@ input:focus {
                                                 </td>
                                                 <td>
                                                     <input type="text" value="28800" placeholder="Interval"
-                                                           name={{account.username}}postInterval>
+                                                           name={{account.id}}postInterval>
                                                 </td>
                                             </tr>
                                         </table>

@@ -41,9 +41,9 @@ class InstaPost:
     def start(self):
         self.logger.info("Post bot started...")
 
-        if not self.API.is_logged_in:
-            if not self._login():
-                return False
+        # if not self.API.is_logged_in:
+        #     if not self._login():
+        #         return False
 
         progress = 0
         while True:

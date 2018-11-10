@@ -30,8 +30,8 @@ class InstaUnfollow:
         self.logger.info('Collecting users to unfollow...')
 
         # Get people followings
-
-        following = self.API.user_following(self.id)
+        rank_token = self.API.generate_uuid()
+        following = self.API.user_following(self.id, rank_token=rank_token)
         following_users = following.get("users")
         _ids = [user.get("pk", 0) for user in following_users]
         return _ids
@@ -89,7 +89,7 @@ class InstaUnfollow:
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
 @click.option('--password', default='', prompt='Password:', help='Instagram account name')
 def main(username, password):
-    print username
+    print(username)
     bot = InstaUnfollow(username=username, password=password)
     bot.start()
 

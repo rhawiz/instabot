@@ -16,12 +16,13 @@ import time
 import copy
 import math
 
-from dill import dill
 from requests_toolbelt import MultipartEncoder
 from moviepy.editor import VideoFileClip
 
 import struct
 import imghdr
+
+from app.core.utils import get_logger
 
 
 def get_image_size(fname):
@@ -107,7 +108,6 @@ class InstagramAPI:
         try:
             from app import logger
         except ImportError:
-            from utils import get_logger
             logger = get_logger()
         self.logger = logging.LoggerAdapter(logger, {'user': username, 'bot': 'API'})
         m = hashlib.md5()
@@ -820,7 +820,7 @@ if __name__ == "__main__":
     print(username_id)
     print(device_id)
     print(s)
-    print s.cookies
+    print(s.cookies)
     s2 = load_session("session.pkl")
     api2 = InstagramAPI(
         username="theshitquote", password="raw12743",
