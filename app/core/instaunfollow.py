@@ -7,6 +7,8 @@ import click
 from instagram_private_api import Client
 from instagram_web_api import Client as WebClient
 
+from app.core.utils import get_logger
+
 
 class InstaUnfollow:
     def __init__(self, username, password, API=None, action_interval=8.0, rate=120, interval=5400, unfollow_all=True):
@@ -18,10 +20,9 @@ class InstaUnfollow:
         self.unfollow_all = unfollow_all
         try:
             from app import logger
-        except ImportError:
-            from utils import get_logger
             logger = get_logger()
-
+        except ImportError:
+            pass
         self.logger = logging.LoggerAdapter(logger, {'user': self.username, 'bot': 'instaunfollow'})
         self.API = Client(self.username, self.password) if API is None else API
         self.webAPI = WebClient()
@@ -31,9 +32,13 @@ class InstaUnfollow:
 
         # Get people followings
         rank_token = self.API.generate_uuid()
+
         following = self.API.user_following(self.id, rank_token=rank_token)
+
         following_users = following.get("users")
+
         _ids = [user.get("pk", 0) for user in following_users]
+
         return _ids
 
     def _login(self):

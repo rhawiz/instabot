@@ -63,7 +63,7 @@ class GoogleImageSearch(object):
             soup = BeautifulSoup(html)
 
             contents = soup.findAll(name="a", attrs={"jsname": "hSRGPd"})
-            print contents
+            print(contents)
             for content_soup in contents:
                 self._scrape_contents(content_soup)
             if not url:
@@ -82,7 +82,7 @@ class GoogleImageSearch(object):
         url_soup = soup.find(name="a", attrs={"class": "irc_fsl irc_but i3596", "href": re.compile("http\:.*")})
         url = source_soup["href"] if url_soup is not None and "href" in url_soup else None
 
-        print source, url
+        print(source, url)
 
         sleep(1)
 

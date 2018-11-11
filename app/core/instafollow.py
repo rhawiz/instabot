@@ -116,11 +116,6 @@ class InstaFollow:
                 sleep(200)
                 bad_requests = 0
 
-            try:
-                self.logger.debug(self.API.last_response.content)
-            except Exception as e:
-                self.logger.debug(e)
-
             if not (progress % self.rate):
                 progress = 0
                 followings = self.webAPI.user_info2(self.username).get("follows", {}).get("count", 0)

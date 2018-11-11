@@ -40,7 +40,7 @@ class ContentCollector:
                     clip = mp.VideoFileClip("test.gif")
                     clip.write_videofile("test.mp4")
 
-                print title, content_url
+                print(title, content_url)
 
     def _get_tumblr_content(self, search_query):
         search_query = re.sub("[ ]+", "+", search_query)
@@ -63,7 +63,7 @@ class ContentCollector:
             for tag in tags:
                 temp = tag.replace(" ", "-")
 
-            print content, url
+            print(content, url)
 
 
 
