@@ -15,18 +15,19 @@ def collect_followers(follow_bot, unfollow_bot):
     while True:
         try:
             unfollow_bot.start()
-        except Exception, e:
+        except Exception as e:
             logger.exception(e)
         try:
             follow_bot.start()
-        except Exception, e:
+        except Exception as  e:
             logger.exception(e)
 
 
 @click.command()
 @click.option('--username', default='hwzearth', prompt='Username:', help='Instagram account name')
 @click.option('--password', default='', prompt='Password:', help='Instagram account name')
-@click.option('--similar_users', default='earthpix,awesome.earth', prompt='Similar users accounts:', help='Similar user accounts')
+@click.option('--similar_users', default='earthpix,awesome.earth', prompt='Similar users accounts:',
+              help='Similar user accounts')
 def main(username, password, similar_users):
     follow_bot = InstaFollow(username=username, password=password, similar_users=similar_users)
     unfollow_bot = InstaUnfollow(username=username, password=password)

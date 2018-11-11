@@ -660,7 +660,7 @@ class InstagramAPI:
 
     def generate_signature(self, data):
 
-        parsed_data = urllib.quote(data)
+        parsed_data = urllib.parse.quote(data)
         signed_body = hmac.new(self.IG_SIG_KEY.encode('utf-8'), data.encode('utf-8'), hashlib.sha256).hexdigest()
         signature = 'ig_sig_key_version={}&signed_body={}.{}'.format(
             self.SIG_KEY_VERSION,
@@ -801,36 +801,5 @@ def load_session(fname):
         return session
 
 
-if __name__ == "__main__":
-    api = InstagramAPI(
-        username="theshitquote", password="raw12743"
-    )
 
-    api.login()
 
-    _uuid = api.uuid
-    token = api.token
-    username_id = api.username_id
-    device_id = api.device_id
-    s = api.s
-    save_session(s, "session.pkl")
-    print(api)
-    print(_uuid)
-    print(token)
-    print(username_id)
-    print(device_id)
-    print(s)
-    print(s.cookies)
-    s2 = load_session("session.pkl")
-    api2 = InstagramAPI(
-        username="theshitquote", password="raw12743",
-        _uuid=_uuid,
-        token=token,
-        username_id=username_id,
-        device_id=device_id,
-        s=s2
-
-    )
-
-    api2.follow(4113104274)
-    print(api2.last_json)

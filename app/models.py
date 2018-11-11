@@ -192,7 +192,9 @@ def grow_followers_worker(follow_bot, unfollow_bot):
     try:
         followings = len(unfollow_bot.API.get_total_self_followings())
     except Exception as e:
+
         followings = 0
+    print(followings)
 
     if followings > 7000:
         bot1 = unfollow_bot
