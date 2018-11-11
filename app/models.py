@@ -11,6 +11,7 @@ import multiprocessing
 
 import logging
 import psutil
+from instagram_private_api import Client
 
 from app import logger
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
@@ -190,8 +191,12 @@ def bot_worker(follow, unfollow, post):
 
 def grow_followers_worker(follow_bot, unfollow_bot):
     try:
-        followings = len(unfollow_bot.API.get_total_self_followings())
+        user_followings = unfollow_bot.API.user_following(unfollow_bot.API.authenticated_user_id,
+                                                          rank_token=unfollow_bot.API.generate_uuid()).get("users")
+
+        followings = len(user_followings)
     except Exception as e:
+        print(e)
         followings = 0
 
     print("Total following:", followings)

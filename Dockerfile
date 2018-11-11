@@ -9,4 +9,5 @@ RUN export DATABASE_URL=sqlite:////app/instabot.db
 RUN python /app/db_create.py
 WORKDIR /app
 EXPOSE 5000
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "-b", "unix:instabot.sock", "app:app"]
+CMD [
+]
