@@ -799,7 +799,3 @@ def load_session(fname):
         session = requests.session()
         session.cookies = cookies
         return session
-
-
-
-
